@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f1020">
+  <meta name="description" content="جوّ | JAW by ISCO. جمعتكم لها جوّ ثاني. برا السالفة، المافيا، المحكمة وألعاب للشلّة في الروم وعلى جهاز واحد.">
+  <meta name="apple-mobile-web-app-title" content="جوّ">
+  <title>جوّ | JAW by ISCO</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/jaw-icon-v2-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/jaw-icon-v2-180.png">
+  <link rel="preload" href="./assets/plex-arabic-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/plex-arabic-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./motion.css">
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./visual.css">
+  <link rel="stylesheet" href="./founder.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body data-nav="home">
+  <svg xmlns="http://www.w3.org/2000/svg" class="icon-definitions" aria-hidden="true" width="0" height="0">
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3zM9 20v-6h6v6"/></symbol>
+    <symbol id="icon-game" viewBox="0 0 24 24"><path d="M7.1 7h9.8a4 4 0 0 1 3.94 3.3l1.03 5.8a2 2 0 0 1-3.38 1.78L15 15H9l-3.49 2.88a2 2 0 0 1-3.38-1.78l1.03-5.8A4 4 0 0 1 7.1 7ZM7.5 9v4m-2-2h4m6 .3h.01m3-.9h.01"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M10 3h4l.6 2.5 1.6.9 2.4-.8 2 3.5-1.9 1.6v1.8l1.9 1.7-2 3.5-2.4-.9-1.6.9-.6 2.3h-4l-.5-2.3-1.6-.9-2.5.9-2-3.5 2-1.7v-1.8l-2-1.6 2-3.5 2.5.8 1.6-.9z"/><circle cx="12" cy="11.7" r="2.7"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z" fill="currentColor" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-bolt" viewBox="0 0 24 24"><path d="m13 2-9 12h7l-1 8 10-12h-7z"/></symbol>
+    <symbol id="icon-people" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 20v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2M16 4.5a3 3 0 0 1 0 6m2 3a4 4 0 0 1 3 4V20"/></symbol>
+    <symbol id="icon-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5zM3 12l9 5 9-5m-18 4 9 5 9-5"/></symbol>
+    <symbol id="icon-headphones" viewBox="0 0 24 24"><path d="M3 14v-2a9 9 0 1 1 18 0v2m-18 0h4v7H5a2 2 0 0 1-2-2zm18 0h-4v7h2a2 2 0 0 0 2-2z"/></symbol>
+    <symbol id="icon-crown" viewBox="0 0 24 24"><path d="m3 7 5 4 4-7 4 7 5-4-2 12H5z"/></symbol>
+    <symbol id="icon-flame" viewBox="0 0 24 24"><path d="M13 2c0 4-4 5-4 8 0 1 0 2 1 3-3 0-4-2-4-3a7.5 7.5 0 1 0 13.5 5c0-4-2-6.6-4-8 .4 2-.5 3-1 3C15 6 14 4 13 2Z"/><path d="M10 18c0-1.5 1.1-2.2 2-3 1 1 2 1.7 2 3a2 2 0 1 1-4 0Z"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main" data-action="focus-main">انتقل للمحتوى</a>
+  <header class="header shell">
+    <div class="header-inner">
+      <a class="brand jaw-intro-logo" href="#home" data-action="home" aria-label="جوّ، الرئيسية">
+        <img src="./assets/jaw-wordmark.webp" width="318" height="219" alt="">
+        <span class="brand-by" lang="en" dir="ltr">BY ISCO</span>
+      </a>
+      <nav aria-label="التنقل الرئيسي" class="nav">
+        <a href="#home" data-action="home" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#icon-home"/></svg> الرئيسية</a>
+        <a href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-game"/></svg> الألعاب</a>
+        <a href="#teams" data-action="teams"><svg class="icon" aria-hidden="true"><use href="#icon-people"/></svg> الفرق</a>
+        <button type="button" data-action="help"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg> كيفية اللعب</button>
+      </nav>
+      <div class="header-tools">
+        <button class="button button-icon button-outline mobile-help" type="button" data-action="help" aria-label="كيف نلعب؟" title="كيف نلعب؟"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg></button>
+        <button id="install-top" class="button button-icon button-outline" type="button" data-action="install" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
+        <button class="button button-icon button-outline" type="button" data-action="settings" aria-label="الإعدادات" title="الإعدادات"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg></button>
+      </div>
+    </div>
+    <div class="connection" id="connection" role="status" hidden></div>
+  </header>
+
+  <main class="shell" id="main" tabindex="-1">
+    <div id="home" data-browse>
+      <section class="hero" aria-labelledby="hero-title">
+        <picture class="hero-art">
+          <source media="(max-width: 639px)" srcset="./assets/jaw-campfire.webp">
+          <source media="(max-width: 1100px)" srcset="./assets/jaw-lounge-small.webp">
+          <img src="./assets/jaw-lounge.webp" width="1720" height="688" alt="" fetchpriority="high">
+        </picture>
+        <video class="jaw-campfire" data-src="./assets/jaw-campfire-loop.mp4" muted loop playsinline preload="none" aria-hidden="true" disablepictureinpicture></video>
+        <div class="hero-copy">
+          <div class="welcome-brand jaw-intro-logo">
+            <img src="./assets/jaw-wordmark.webp" width="318" height="219" alt="جوّ">
+            <span class="brand-by" lang="en" dir="ltr">BY ISCO</span>
+          </div>
+          <h1 id="hero-title">جمعتكم لها <strong>جوّ ثاني.</strong></h1>
+          <p class="hero-desc">ألعاب تفاعلية للجمعات والأصدقاء. افتحوا رومكم، وخلوها تبدأ.</p>
+          <div class="actions hero-actions">
+            <button class="button button-primary start-now" type="button" data-action="setup" data-kind="outsider"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg> ابدأ اللعب الآن</button>
+            <a class="button button-outline explore-games" href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-game"/></svg> استكشف الألعاب</a>
+            <a class="button button-primary mobile-start" href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg> ابدأ الآن</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="catalogue" aria-labelledby="featured-title">
+        <div class="section-header browse-section-header">
+          <h2 id="featured-title"><svg class="icon" aria-hidden="true"><use href="#icon-flame"/></svg> أبرز الألعاب</h2>
+          <a class="button button-outline button-compact" href="#games" data-action="games">كل الألعاب</a>
+        </div>
+        <div class="game-grid" id="featured-games"><!-- featured-games:start -->
+          <article class="game-card" data-kind="outsider">
+            <button class="game-tile" type="button" data-action="setup" data-kind="outsider" aria-label="العب برا السالفة" aria-describedby="game-info-featured-games-outsider">
+              <img src="./assets/jaw-game-0.webp" alt="" loading="eager">
+              <span class="game-caption">
+                <strong>برا السالفة</strong>
+                <small id="game-info-featured-games-outsider"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> كلمات وتخمين</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card" data-kind="mafia">
+            <button class="game-tile" type="button" data-action="setup" data-kind="mafia" aria-label="العب المافيا" aria-describedby="game-info-featured-games-mafia">
+              <img src="./assets/jaw-game-1.webp" alt="" loading="eager">
+              <span class="game-caption">
+                <strong>المافيا</strong>
+                <small id="game-info-featured-games-mafia"><bdi dir="ltr">٥–١٠</bdi> لاعبين <span aria-hidden="true">·</span> أدوار سرّية</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card" data-kind="court">
+            <button class="game-tile" type="button" data-action="setup" data-kind="court" aria-label="العب المحكمة" aria-describedby="game-info-featured-games-court">
+              <img src="./assets/jaw-game-2.webp" alt="" loading="eager">
+              <span class="game-caption">
+                <strong>المحكمة</strong>
+                <small id="game-info-featured-games-court"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> مرافعات وتصويت</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card" data-kind="liar">
+            <button class="game-tile" type="button" data-action="setup" data-kind="liar" aria-label="العب مين الكذاب؟" aria-describedby="game-info-featured-games-liar">
+              <img src="./assets/jaw-game-3.webp" alt="" loading="eager">
+              <span class="game-caption">
+                <strong>مين الكذاب؟</strong>
+                <small id="game-info-featured-games-liar"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> تمويه وتخمين</small>
+              </span>
+            </button>
+          </article>
+        <!-- featured-games:end --></div>
+        <noscript><p class="notice">فعّل جافاسكربت في متصفحك عشان تبدأ اللعب.</p></noscript>
+
+      </section>
+
+      <div class="home-extras">
+        <section class="home-extra home-mood" aria-labelledby="mood-heading" data-motion-enter="once">
+          <h2 id="mood-heading"><span aria-hidden="true">✦</span> وش جوّكم الليلة؟</h2>
+          <p>اختاروا المزاج ونرشّح لكم لعبة.</p>
+          <fieldset class="mood-picker">
+            <legend class="sr-only">اختاروا مزاج الشلّة</legend>
+            <input class="sr-only" type="radio" name="home-mood" id="mood-laugh">
+            <label for="mood-laugh">ضحك</label>
+            <input class="sr-only" type="radio" name="home-mood" id="mood-mystery" checked>
+            <label for="mood-mystery">غموض</label>
+            <input class="sr-only" type="radio" name="home-mood" id="mood-challenge">
+            <label for="mood-challenge">تحدّي</label>
+            <div class="mood-picks" aria-live="polite">
+              <button class="button mood-pick mood-pick-laugh" type="button" data-action="setup" data-kind="social">
+                <img src="./assets/game-2.webp" alt="" width="64" height="64" loading="lazy">
+                <strong>مين فينا؟</strong><span>ابدأ الجولة <b aria-hidden="true">←</b></span>
+              </button>
+              <button class="button mood-pick mood-pick-mystery" type="button" data-action="setup" data-kind="anonymous">
+                <img src="./assets/jaw-anonymous.webp" alt="" width="64" height="64" loading="lazy">
+                <strong>سؤال من مجهول</strong><span>ابدأ الجولة <b aria-hidden="true">←</b></span>
+              </button>
+              <button class="button mood-pick mood-pick-challenge" type="button" data-action="setup" data-kind="challenge">
+                <img src="./assets/game-3.webp" alt="" width="64" height="64" loading="lazy">
+                <strong>تحدي ٣٠ ثانية</strong><span>ابدأ الجولة <b aria-hidden="true">←</b></span>
+              </button>
+            </div>
+          </fieldset>
+        </section>
+
+        <section class="home-extra home-lineup" aria-labelledby="lineup-heading" data-motion-enter="once">
+          <h2 id="lineup-heading"><svg class="icon" aria-hidden="true"><use href="#icon-flame"/></svg> جولة جاهزة</h2>
+          <p>ثلاث ألعاب مرتّبة لسهرة الشلّة.</p>
+          <ol class="lineup-games">
+            <li><button class="button lineup-game" type="button" data-action="choice-start">
+              <svg class="icon" aria-hidden="true"><use href="#icon-layers"/></svg>لو خيروك
+            </button></li>
+            <li><button class="button lineup-game" type="button" data-action="setup" data-kind="outsider">
+              <svg class="icon" aria-hidden="true"><use href="#icon-people"/></svg>برا السالفة
+            </button></li>
+            <li><button class="button lineup-game" type="button" data-action="setup" data-kind="court">
+              <svg class="icon" aria-hidden="true"><use href="#icon-bolt"/></svg>المحكمة
+            </button></li>
+          </ol>
+          <button class="button home-text-action" type="button" data-action="choice-start">ابدأ أول لعبة <span aria-hidden="true">←</span></button>
+        </section>
+
+        <section class="home-extra home-room-guide" aria-labelledby="room-guide-heading" data-motion-enter="once">
+          <h2 id="room-guide-heading"><svg class="icon" aria-hidden="true"><use href="#icon-headphones"/></svg> كيف تشغّل الروم؟</h2>
+          <ol class="room-steps">
+            <li><span aria-hidden="true">١</span><div><strong>اختر اللعبة</strong><p>من الرئيسية أو مكتبة الألعاب.</p></div></li>
+            <li><span aria-hidden="true">٢</span><div><strong>حدّد اللاعبين</strong><p>اكتب أسماء الشلّة أو ابدأ بالأرقام.</p></div></li>
+            <li><span aria-hidden="true">٣</span><div><strong>شغّل الجولة من جوالك</strong><p>أنت تدير اللعبة والكل يشارك بصوته في الروم.</p></div></li>
+          </ol>
+          <button class="button home-text-action" type="button" data-action="help">كيف نلعب؟ <span aria-hidden="true">←</span></button>
+        </section>
+      </div>
+    </div>
+
+    <section class="catalogue browse-page" id="games" data-browse aria-labelledby="games-title" hidden>
+      <div class="browse-page-heading">
+        <span class="browse-emblem" aria-hidden="true"><svg class="icon"><use href="#icon-game"/></svg></span>
+        <div>
+          <h1 id="games-title" tabindex="-1">الألعاب</h1>
+          <p>اختاروا لعبة تناسب جمعتكم.</p>
+        </div>
+      </div>
+      <section class="quick-section" aria-labelledby="group-title">
+        <h2 class="quick-title" id="group-title">ألعاب الشلّة</h2>
+        <div class="game-grid quick-grid" id="main-games"><!-- main-games:start -->
+          <article class="game-card game-quick" data-kind="outsider">
+            <button class="game-tile" type="button" data-action="setup" data-kind="outsider" aria-label="العب برا السالفة" aria-describedby="game-info-main-games-outsider">
+              <img src="./assets/jaw-game-0.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>برا السالفة</strong>
+                <small id="game-info-main-games-outsider"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> كلمات وتخمين</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="mafia">
+            <button class="game-tile" type="button" data-action="setup" data-kind="mafia" aria-label="العب المافيا" aria-describedby="game-info-main-games-mafia">
+              <img src="./assets/jaw-game-1.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>المافيا</strong>
+                <small id="game-info-main-games-mafia"><bdi dir="ltr">٥–١٠</bdi> لاعبين <span aria-hidden="true">·</span> أدوار سرّية</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="court">
+            <button class="game-tile" type="button" data-action="setup" data-kind="court" aria-label="العب المحكمة" aria-describedby="game-info-main-games-court">
+              <img src="./assets/jaw-game-2.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>المحكمة</strong>
+                <small id="game-info-main-games-court"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> مرافعات وتصويت</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="liar">
+            <button class="game-tile" type="button" data-action="setup" data-kind="liar" aria-label="العب مين الكذاب؟" aria-describedby="game-info-main-games-liar">
+              <img src="./assets/jaw-game-3.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>مين الكذاب؟</strong>
+                <small id="game-info-main-games-liar"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> تمويه وتخمين</small>
+              </span>
+            </button>
+          </article>
+        <!-- main-games:end --></div>
+      </section>
+      <section class="quick-section" aria-labelledby="quick-title">
+        <h2 class="quick-title" id="quick-title" tabindex="-1">جولات سريعة</h2>
+        <div class="game-grid quick-grid" id="quick-games"><!-- quick-games:start -->
+          <article class="game-card game-quick" data-kind="evidence">
+            <button class="game-tile" type="button" data-action="setup" data-kind="evidence" aria-label="العب افتح الدليل" aria-describedby="game-info-quick-games-evidence">
+              <img src="./assets/jaw-evidence.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>افتح الدليل</strong>
+                <small id="game-info-quick-games-evidence"><bdi dir="ltr">٢–١٠</bdi> لاعبين <span aria-hidden="true">·</span> لغز وتحقيق</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="reverse">
+            <button class="game-tile" type="button" data-action="setup" data-kind="reverse" aria-label="العب وش كان السؤال؟" aria-describedby="game-info-quick-games-reverse">
+              <img src="./assets/jaw-reverse.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>وش كان السؤال؟</strong>
+                <small id="game-info-quick-games-reverse"><bdi dir="ltr">٣–١٠</bdi> لاعبين <span aria-hidden="true">·</span> تأليف وتصويت</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="know">
+            <button class="game-tile" type="button" data-action="setup" data-kind="know" aria-label="العب لو تعرفني؟" aria-describedby="game-info-quick-games-know">
+              <img src="./assets/jaw-know.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>لو تعرفني؟</strong>
+                <small id="game-info-quick-games-know"><bdi dir="ltr">٢–١٠</bdi> لاعبين <span aria-hidden="true">·</span> تخمين ونقاط</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="anonymous">
+            <button class="game-tile" type="button" data-action="setup" data-kind="anonymous" aria-label="العب سؤال من مجهول" aria-describedby="game-info-quick-games-anonymous">
+              <img src="./assets/jaw-anonymous.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>سؤال من مجهول</strong>
+                <small id="game-info-quick-games-anonymous"><bdi dir="ltr">٢–١٠</bdi> لاعبين <span aria-hidden="true">·</span> رسائل سرّية</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="choice">
+            <button class="game-tile" type="button" data-action="choice-start" data-kind="choice" aria-label="العب لو خيروك" aria-describedby="game-info-quick-games-choice">
+              <img src="./assets/jaw-choice.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>لو خيروك</strong>
+                <small id="game-info-quick-games-choice">حب واعترافات وانقفاط</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="social">
+            <button class="game-tile" type="button" data-action="setup" data-kind="social" aria-label="العب مين فينا؟" aria-describedby="game-info-quick-games-social">
+              <img src="./assets/game-2.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>مين فينا؟</strong>
+                <small id="game-info-quick-games-social"><bdi dir="ltr">٢–١٠</bdi> لاعبين <span aria-hidden="true">·</span> أسئلة الشلّة وتصويت</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="challenge">
+            <button class="game-tile" type="button" data-action="setup" data-kind="challenge" aria-label="العب تحدي ٣٠ ثانية" aria-describedby="game-info-quick-games-challenge">
+              <img src="./assets/game-3.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>تحدي ٣٠ ثانية</strong>
+                <small id="game-info-quick-games-challenge"><bdi dir="ltr">٢–١٠</bdi> لاعبين <span aria-hidden="true">·</span> سرعة وتحدّي</small>
+              </span>
+            </button>
+          </article>
+        <!-- quick-games:end --></div>
+      </section>
+    </section>
+
+    <section class="catalogue browse-page" id="teams" data-browse aria-labelledby="teams-title" hidden>
+      <div class="browse-page-heading">
+        <span class="browse-emblem browse-emblem-gold" aria-hidden="true"><svg class="icon"><use href="#icon-people"/></svg></span>
+        <div>
+          <h1 id="teams-title" tabindex="-1">ألعاب الفرق</h1>
+          <p>فريق ضد فريق · من ٤ إلى ١٠ لاعبين</p>
+        </div>
+      </div>
+      <div class="game-grid quick-grid" id="team-games"><!-- team-games:start -->
+          <article class="game-card game-quick" data-kind="taboo">
+            <button class="game-tile" type="button" data-action="setup" data-kind="taboo" aria-label="العب ممنوع تقول" aria-describedby="game-info-team-games-taboo">
+              <img src="./assets/jaw-team-taboo.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>ممنوع تقول</strong>
+                <small id="game-info-team-games-taboo"><bdi dir="ltr">٤–١٠</bdi> لاعبين <span aria-hidden="true">·</span> شرح وتخمين</small>
+              </span>
+            </button>
+          </article>
+          <article class="game-card game-quick" data-kind="auction">
+            <button class="game-tile" type="button" data-action="setup" data-kind="auction" aria-label="العب المزاد" aria-describedby="game-info-team-games-auction">
+              <img src="./assets/jaw-team-auction.webp" alt="" loading="lazy">
+              <span class="game-caption">
+                <strong>المزاد</strong>
+                <small id="game-info-team-games-auction"><bdi dir="ltr">٤–١٠</bdi> لاعبين <span aria-hidden="true">·</span> مزايدة وتحدّي</small>
+              </span>
+            </button>
+          </article>
+        <!-- team-games:end --></div>
+    </section>
+    <article class="founder-page" id="founder" data-browse hidden>
+      <header class="founder-hero" aria-labelledby="founder-title">
+        <div class="founder-intro">
+          <p class="founder-credit" data-isco-intro>إيسكو <span></span> مؤسس جوّ ولفّه</p>
+          <h1 id="founder-title" tabindex="-1" data-isco-intro>يُحكِم الفكرة.<br> <em>ويصنع لها أثرًا.</em></h1>
+          <p class="founder-lead" data-isco-intro>إيسكو مصوّر وصانع محتوى ومسوّق يبني منتجات رقمية. يأخذ سؤالًا يهمّ الناس، ويحوّله إلى قصة تُروى أو تجربة تستحق العودة.</p>
+          <div class="founder-actions" data-isco-intro>
+            <button class="button isco-button-gold" type="button" data-action="founder-jump" data-target="founder-work">أعمال إيسكو ومشاريعه <span aria-hidden="true">↓</span></button>
+            <button class="button isco-button-quiet" type="button" data-action="founder-jump" data-target="founder-vision">الرؤية إلى ٢٠٣٠</button>
+          </div>
+          <div class="isco-profile" data-isco-intro>
+            <img class="isco-profile-avatar" src="./assets/isco-jackaroo.webp" width="192" height="192" alt="" loading="lazy" decoding="async">
+            <div class="isco-profile-identity">
+              <p class="isco-profile-platform">حساب إيسكو في جكارو</p>
+              <p class="isco-profile-name"><bdi lang="en" dir="ltr">Isco★</bdi></p>
+              <label class="isco-profile-id">
+                <span aria-hidden="true">ID</span>
+                <input type="text" value="653793632" dir="ltr" aria-label="رقم اللاعب في جكارو" readonly>
+              </label>
+            </div>
+            <button class="button isco-profile-copy" type="button" data-action="founder-copy-profile" aria-label="نسخ رقم اللاعب في جكارو">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path class="isco-copy-symbol" d="M8 8h12v12H8zM16 4H4v12"/>
+                <path class="isco-check-symbol" d="m5 12 4 4 10-10"/>
+              </svg>
+              <span>نسخ</span>
+            </button>
+            <p class="isco-copy-message" hidden>اضغط مطوّلًا على الرقم لنسخه يدويًا.</p>
+          </div>
+        </div>
+        <div class="isco-stage isco-hero-stage" data-isco-scene aria-hidden="true">
+          <svg class="isco-display" viewBox="0 0 560 430" focusable="false">
+            <defs>
+              <radialGradient id="isco-halo"><stop stop-color="#b88655" stop-opacity=".5"/><stop offset="1" stop-color="#a35c34" stop-opacity="0"/></radialGradient>
+              <radialGradient id="isco-core" cx=".4" cy=".28" r=".8"><stop stop-color="#473427"/><stop offset=".52" stop-color="#1a1317"/><stop offset="1" stop-color="#0e0b11"/></radialGradient>
+              <linearGradient id="isco-metal" x1=".17" y1="0" x2=".84" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#7d552f"/><stop offset=".34" stop-color="#ffe4ae"/><stop offset=".58" stop-color="#b27a47"/><stop offset=".83" stop-color="#ffeaca"/><stop offset="1" stop-color="#9e6b40"/></linearGradient>
+              <path id="isco-engraving" d="M126 213a154 154 0 0 1 308 0" />
+            </defs>
+            <ellipse class="isco-loop isco-halo" cx="280" cy="210" rx="253" ry="193" fill="url(#isco-halo)"/>
+            <g fill="none" stroke="#c69a6d" opacity=".32">
+              <path d="M280 13v44m0 314v46M30 213h63m374 0h63M112 70l40 36m255 216 40 36M112 356l40-34m255-216 40-36"/>
+              <circle cx="280" cy="213" r="176"/>
+              <circle cx="280" cy="213" r="160" stroke-dasharray="1 5"/>
+              <circle cx="280" cy="213" r="136"/>
+            </g>
+            <g class="isco-loop isco-orbit">
+              <circle cx="280" cy="213" r="176" fill="none" stroke="url(#isco-metal)" stroke-width="2" stroke-dasharray="144 962"/>
+              <circle cx="456" cy="213" r="4" fill="#ffe3b1"/>
+              <path d="M104 213h12m-6-6v12" stroke="#d3a370"/>
+            </g>
+            <g class="isco-loop isco-orbit isco-orbit-back" fill="none" stroke="url(#isco-metal)" opacity=".75">
+              <circle cx="280" cy="213" r="136" stroke-dasharray="90 764"/>
+              <circle cx="144" cy="213" r="3" fill="#eabc89"/>
+            </g>
+            <circle cx="280" cy="213" r="112" fill="url(#isco-core)" stroke="url(#isco-metal)" stroke-width="2"/>
+            <circle cx="280" cy="213" r="103" fill="none" stroke="#a4744e" opacity=".5"/>
+            <g class="isco-loop isco-float" fill="none" stroke="url(#isco-metal)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m253 184-5-23 17 10 15-19 15 19 17-10-5 23q-27-7-54 0Zm3 8h48"/>
+            </g>
+            <text x="280" y="246" text-anchor="middle" direction="ltr" fill="url(#isco-metal)" class="isco-monogram">ISCO</text>
+            <path d="M253 267h54m-27-4 4 4-4 4-4-4Z" fill="none" stroke="#d0a173" />
+            <text class="isco-engraved" fill="#d9b086" direction="ltr"><textPath href="#isco-engraving" startOffset="50%" text-anchor="middle">DESIGN · STORY · EXPERIENCE</textPath></text>
+            <g class="isco-loop isco-glint" fill="#ffe1b2"><circle cx="86" cy="144" r="2"/><circle cx="462" cy="270" r="2"/><circle cx="163" cy="317" r="2"/><circle cx="400" cy="90" r="1.5"/></g>
+          </svg>
+        </div>
+        <button class="isco-pause" type="button" data-action="founder-motion" aria-pressed="false">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12m6-12v12"/></svg>
+          <span>إيقاف حركة المعرض</span>
+        </button>
+      </header>
+
+      <section class="founder-chapter" aria-labelledby="founder-work">
+        <header class="founder-section-head">
+          <h2 id="founder-work" tabindex="-1">معرض الأعمال.</h2>
+          <p>كل مشروع بدأ من احتياج مختلف.</p>
+        </header>
+        <article class="founder-case" data-motion-enter="once">
+          <div class="isco-stage isco-jaw" data-isco-scene aria-hidden="true">
+            <svg class="isco-display" viewBox="0 0 540 325" focusable="false">
+              <defs>
+                <linearGradient id="isco-card-face" x2="0" y2="1"><stop stop-color="#5d2aac"/><stop offset="1" stop-color="#231039"/></linearGradient>
+                <linearGradient id="isco-card-edge" x2=".85" y2="1"><stop stop-color="#edcaff"/><stop offset="1" stop-color="#7355ad"/></linearGradient>
+                <g id="isco-playing-card">
+                  <rect x="-58" y="-76" width="116" height="152" rx="14" fill="url(#isco-card-face)" stroke="url(#isco-card-edge)" stroke-width="1.5"/>
+                  <rect x="-51" y="-69" width="102" height="138" rx="10" fill="none" stroke="#d3a6fd" opacity=".38"/>
+                  <path d="M-41-51h13m-6-6v12m62 96h13m-6-6v12" fill="none" stroke="#e4baff" stroke-linecap="round"/>
+                </g>
+              </defs>
+              <g fill="none" stroke="#bf8cff" opacity=".26">
+                <ellipse cx="270" cy="251" rx="179" ry="37"/><ellipse cx="270" cy="251" rx="139" ry="25"/>
+                <path d="M42 251h56m344 0h56M91 78h32m-16-16v32m302 33h29m-14-14v28"/>
+              </g>
+              <g transform="translate(190 169) rotate(-17)"><g class="isco-loop isco-deal"><use href="#isco-playing-card"/><path d="M-13 1h26M0-12v26" stroke="#e1bdff" stroke-width="2"/></g></g>
+              <g transform="translate(350 169) rotate(17)"><g class="isco-loop isco-deal isco-deal-late"><use href="#isco-playing-card"/><path d="m0-15 14 15L0 15-14 0Z" fill="none" stroke="#e1bdff" stroke-width="2"/></g></g>
+              <g transform="translate(270 151)"><g class="isco-loop isco-float">
+                <use href="#isco-playing-card"/>
+                <path d="m-23-10-4-19 14 8L0-38l13 17 14-8-4 19q-23-5-46 0Zm2 7h42" fill="none" stroke="#ffd298" stroke-width="2.5" stroke-linejoin="round"/>
+                <text x="0" y="39" fill="#f4dcff" text-anchor="middle" class="isco-card-name">جوّ</text>
+              </g></g>
+              <g class="isco-loop isco-glint" fill="#ecccff"><circle cx="137" cy="131" r="2.5"/><circle cx="395" cy="69" r="2.5"/><circle cx="425" cy="218" r="2"/><circle cx="121" cy="200" r="1.5"/></g>
+            </svg>
+          </div>
+          <div class="founder-case-copy">
+            <p class="founder-case-type">ترفيه اجتماعي</p>
+            <h3>جوّ <bdi lang="en">JAW</bdi></h3>
+            <p>بدأ إيسكو من سؤال يتكرّر في الرومات الصوتية: «وش نلعب؟». بنى جوّ عشان يدير المضيف الجولة من جواله، من توزيع الأدوار إلى إعلان النتيجة، والشلّة تكمّل اللعب في رومها.</p>
+            <a class="button isco-button-quiet" href="#games" data-action="games">جرّب جوّ <span aria-hidden="true">←</span></a>
+          </div>
+        </article>
+
+        <article class="founder-case founder-case-alternate" data-motion-enter="once">
+          <div class="isco-stage isco-laffa" data-isco-scene aria-hidden="true">
+            <svg class="isco-display" viewBox="0 0 540 325" focusable="false">
+              <defs>
+                <linearGradient id="isco-laffa-frame" x2="1" y2="1"><stop stop-color="#e6ceff"/><stop offset=".45" stop-color="#64428a"/><stop offset="1" stop-color="#aa82e8"/></linearGradient>
+                <linearGradient id="isco-laffa-shop" x2="1" y2="1"><stop stop-color="#8764c2"/><stop offset="1" stop-color="#34204d"/></linearGradient>
+              </defs>
+              <g fill="none" stroke="#c087ec" opacity=".34">
+                <ellipse cx="270" cy="163" rx="210" ry="89" transform="rotate(-12 270 163)"/>
+                <ellipse cx="270" cy="163" rx="195" ry="76" transform="rotate(-12 270 163)" stroke-dasharray="2 7"/>
+                <path d="M89 159h94m174-9h92m-315 83h63m146-154h64"/>
+              </g>
+              <g transform="translate(270 162) rotate(-8)">
+                <rect x="-69" y="-122" width="138" height="244" rx="25" fill="#16101f" stroke="url(#isco-laffa-frame)" stroke-width="2"/>
+                <rect x="-60" y="-113" width="120" height="226" rx="19" fill="#261635"/>
+                <rect x="-18" y="-107" width="36" height="6" rx="3" fill="#110a19"/>
+                <rect x="-49" y="-81" width="98" height="75" rx="8" fill="url(#isco-laffa-shop)"/>
+                <text x="0" y="-34" text-anchor="middle" fill="#f0dcff" class="isco-shop-name">لفّه</text>
+                <rect x="-49" y="9" width="45" height="42" rx="6" fill="#4e3568"/>
+                <rect x="4" y="9" width="45" height="42" rx="6" fill="#4e3568"/>
+                <path d="M-39 24h25m-25 12h17m30 28h40m-89 0h30m-30 11h20" stroke="#c29ce8" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+                <path d="M13 28h27l-3 13H16zm6 0 3-5m12 5-3-5" fill="none" stroke="#dfbafa" stroke-width="1.5" stroke-linejoin="round"/>
+                <rect x="-20" y="98" width="40" height="3" rx="2" fill="#9f79cd"/>
+              </g>
+              <g transform="translate(131 154)"><g class="isco-loop isco-float">
+                <rect x="-37" y="-32" width="74" height="64" rx="13" fill="#2d1c43" stroke="#ac83cf"/>
+                <path d="M-13-7h26m-20 1v17H7V-6m-23-1 4-8h24l4 8-4 4H-12Zm13 18V4h6v7" fill="none" stroke="#f6d2ff" stroke-width="1.7" stroke-linejoin="round"/>
+              </g></g>
+              <g transform="translate(408 180)"><g class="isco-loop isco-float isco-float-late">
+                <rect x="-37" y="-32" width="74" height="64" rx="13" fill="#2d1c43" stroke="#ac83cf"/>
+                <path d="M-14-10h28v18h-17l-7 6V8h-4zM-7-2H7m-14 5H4" fill="none" stroke="#f6d2ff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/>
+              </g></g>
+              <path class="isco-loop isco-link-trace" d="M64 180c-5-45 98-87 196-98 78-9 169-5 207 37 30 40-57 102-185 123-79 12-179 9-208-14" fill="none" stroke="#e5adee" stroke-width="2" stroke-dasharray="14 670"/>
+            </svg>
+          </div>
+          <div class="founder-case-copy">
+            <p class="founder-case-type">تجارة محلية</p>
+            <h3>لفّه <bdi lang="en">LAFFA</bdi></h3>
+            <p>أسّس إيسكو لفّه في يافع، حيث كان الوصول إلى المنتجات يتطلّب التنقّل بين الحسابات والرسائل. في لفّه يكتشف العميل المتاجر، ويتواصل مع البائع، ويقدر التاجر يعرض منتجاته وينظّم متجره.</p>
+            <details class="isco-details">
+              <summary>كيف يخطّط إيسكو لنموّ لفّه؟</summary>
+              <p>يبدأ من سوق يعرفه، ويتابع كيف يستخدم التجار المنصّة وهل يعود العملاء إليها. من هذي الملاحظات يحدّد وش يحتاج تطوير قبل التوسّع.</p>
+            </details>
+          </div>
+        </article>
+
+        <article class="founder-case" data-motion-enter="once">
+          <fieldset class="isco-onek-demo">
+            <legend>جرّب اختيار منطقة الحماية</legend>
+            <div class="isco-demo-preview">
+              <div class="isco-stage isco-onek" data-isco-scene aria-hidden="true">
+                <svg class="isco-display" viewBox="0 0 540 300" focusable="false">
+                  <defs>
+                    <linearGradient id="isco-car" x2="0" y2="1"><stop stop-color="#a8aab3"/><stop offset=".15" stop-color="#555861"/><stop offset=".45" stop-color="#26272f"/><stop offset=".85" stop-color="#111116"/><stop offset="1" stop-color="#69636a"/></linearGradient>
+                    <linearGradient id="isco-window" x2="0" y2="1"><stop stop-color="#696d82"/><stop offset="1" stop-color="#171821"/></linearGradient>
+                    <g id="isco-wheel">
+                      <circle r="29" fill="#100f14" stroke="#6d6871"/><circle r="20" fill="#222127" stroke="#85818a"/>
+                      <path d="M0-16v32m-15-21 30 10m-24 8 18-26m-18 0 18 26m-24-8 30-10" stroke="#9d9aa6" stroke-width="2"/>
+                      <circle r="5" fill="#b0a6ae"/>
+                    </g>
+                  </defs>
+                  <g fill="none" stroke="#db9d60" opacity=".23">
+                    <ellipse cx="270" cy="225" rx="220" ry="42"/><ellipse cx="270" cy="225" rx="174" ry="30"/>
+                    <path d="M52 225h436m-218 42v-24m0-177v26M87 112h39m288 0h39" stroke-dasharray="3 5"/>
+                  </g>
+                  <g class="isco-loop isco-glint" stroke="#dc9c61"><path d="M118 116v12m-6-6h12m302-24v12m-6-6h12"/></g>
+                  <ellipse cx="272" cy="219" rx="197" ry="23" fill="#08080e" opacity=".7"/>
+                  <path d="M82 194l6-28q5-10 25-14l50-9 38-31q15-13 40-15l64 1q32 3 60 26l27 21 52 10 22 23 2 18-21 14h-41q-8-34-40-34t-39 34H208q-8-34-39-34t-39 34H99Z" fill="url(#isco-car)" stroke="#b9b5bc" stroke-width="1.5"/>
+                  <path d="M183 144l28-26q14-11 37-12l54 1q27 2 51 22l17 15Z" fill="url(#isco-window)" stroke="#9d9eae"/>
+                  <path d="m274 107 10 37m-20 7-2 49m-64-39 31 3m56-3h20m-74 39h91" fill="none" stroke="#c6bec3" opacity=".5" stroke-linecap="round"/>
+                  <path d="M91 170h19l14-9m316 1 17 14-23-1-15-12Z" fill="#c6bed1" stroke="#d9d5df" stroke-width="1"/>
+                  <g transform="translate(169 211)"><use href="#isco-wheel"/></g>
+                  <g transform="translate(367 211)"><use href="#isco-wheel"/></g>
+                  <g class="isco-zone isco-zone-lights" stroke="#ffdc98" fill="#ffc766" stroke-width="2">
+                    <path d="m440 162 17 14-23-1-15-12Z"/>
+                    <path d="m454 171 46-18v42l-46-18Z" fill="#ffc165" fill-opacity=".16" stroke="none"/>
+                    <circle class="isco-loop isco-zone-ring" cx="438" cy="169" r="16" fill="none"/>
+                  </g>
+                  <g class="isco-zone isco-zone-paint" stroke="#ffd498" fill="#ffbe61" fill-opacity=".3" stroke-width="2">
+                    <path d="M203 154h132l-19 36h-98q-4-14-15-22Z"/>
+                    <circle class="isco-loop isco-zone-ring" cx="272" cy="174" r="16" fill="none"/>
+                  </g>
+                  <g class="isco-zone isco-zone-glass" stroke="#ffd498" fill="#ffbe61" fill-opacity=".3" stroke-width="2">
+                    <path d="m183 144 28-26q14-11 37-12l54 1q27 2 51 22l17 15Z"/>
+                    <circle class="isco-loop isco-zone-ring" cx="302" cy="126" r="14" fill="none"/>
+                  </g>
+                </svg>
+              </div>
+              <div class="isco-demo-controls">
+                <label><input type="radio" name="founder-protection" value="lights" checked><span>الأنوار</span></label>
+                <label><input type="radio" name="founder-protection" value="paint"><span>الطلاء</span></label>
+                <label><input type="radio" name="founder-protection" value="glass"><span>الزجاج</span></label>
+              </div>
+            </div>
+          </fieldset>
+          <div class="founder-case-copy">
+            <p class="founder-case-type">موقع معرض وخدمات سيارات</p>
+            <h3>معرض وان كيه <bdi lang="en">ONE K</bdi></h3>
+            <p>صمّم إيسكو لوان كيه تجربة فريدة تبدأ من السيارة نفسها. يختار الزائر الجزء اللي يبي يحميه على مجسّم ثلاثي الأبعاد، من الأنوار إلى الطلاء والزجاج، ثم يطلب تسعيرة الخدمة عبر واتساب.</p>
+          </div>
+        </article>
+
+        <article class="founder-case founder-case-alternate" data-motion-enter="once">
+          <div class="isco-stage isco-medrara" data-isco-scene aria-hidden="true">
+            <svg class="isco-display" viewBox="0 0 540 325" focusable="false">
+              <defs>
+                <linearGradient id="isco-medrara-copper" x2="1" y2="1"><stop stop-color="#ffe2b0"/><stop offset=".52" stop-color="#d59e71"/><stop offset="1" stop-color="#875c4a"/></linearGradient>
+                <linearGradient id="isco-medrara-page" x2="0" y2="1"><stop stop-color="#ffecd1"/><stop offset="1" stop-color="#be9674"/></linearGradient>
+                <radialGradient id="isco-medrara-halo"><stop stop-color="#f0bd89" stop-opacity=".48"/><stop offset="1" stop-color="#f0bd89" stop-opacity="0"/></radialGradient>
+              </defs>
+              <g fill="none" stroke="#cfad92" opacity=".33">
+                <path d="M164 235v-90c0-55 40-83 106-106 66 23 106 51 106 106v90"/>
+                <path d="M178 219v-72c0-49 36-73 92-94 56 21 92 45 92 94v72"/>
+                <ellipse cx="270" cy="240" rx="181" ry="33"/>
+                <ellipse cx="270" cy="240" rx="145" ry="23" stroke-dasharray="2 5"/>
+                <path d="M72 240h46m304 0h46"/>
+              </g>
+              <ellipse class="isco-loop isco-halo" cx="270" cy="157" rx="143" ry="113" fill="url(#isco-medrara-halo)"/>
+              <g class="isco-loop isco-glint" fill="#ffdda9">
+                <path d="M270 83q2 10 13 13-11 2-13 13-2-11-13-13 11-3 13-13ZM139 139q1 6 8 8-7 1-8 8-2-7-8-8 6-2 8-8ZM401 139q1 6 8 8-7 1-8 8-2-7-8-8 6-2 8-8Z"/>
+                <circle cx="225" cy="117" r="2"/><circle cx="320" cy="119" r="2"/>
+              </g>
+              <g class="isco-loop isco-float">
+                <path d="M151 193q60-17 119 22 59-39 119-22l-8 20q-56-5-111 22-55-27-111-22Z" fill="#142733" stroke="url(#isco-medrara-copper)" stroke-width="2"/>
+                <path d="M148 186q69-25 122 21 53-46 122-21l-6 15q-58-9-116 24-58-33-116-24Z" fill="url(#isco-medrara-copper)"/>
+                <path d="M150 182q26-11 41-39 52 0 79 56 27-56 79-56 15 28 41 39-71-13-120 38-49-51-120-38Z" fill="url(#isco-medrara-page)" stroke="#ffe5bf" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M190 159q35 2 57 30m-70-19q37 0 63 23m110-34q-35 2-57 30m70-19q-37 0-63 23m-30 6v20" fill="none" stroke="#997456" stroke-width="1.5" stroke-linecap="round"/>
+              </g>
+              <path d="M191 253h158m-79-4 4 4-4 4-4-4Z" fill="none" stroke="#cc956f" opacity=".7"/>
+            </svg>
+          </div>
+          <div class="founder-case-copy">
+            <p class="founder-case-type">تصميم واجهة متجر خيري</p>
+            <h3>مدرارًا</h3>
+            <p>عمل إيسكو على واجهة «مدرارًا» على سلة. صُمّمت الصفحة لتسهّل الوصول إلى نشر المصاحف وخيارات الإطعام، وتوضّح كيف يُنفَّذ الطلب وكيف يُوثَّق وصول العطاء.</p>
+          </div>
+        </article>
+
+        <div class="founder-project-index" aria-labelledby="founder-tools">
+          <h3 id="founder-tools" data-motion-enter="once">مشاريع رقمية أخرى</h3>
+          <div class="founder-project-grid">
+            <article class="founder-project-item" data-isco-scene data-motion-enter="once">
+              <span class="isco-project-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="M5 3h14v18l-3-2-4 2-4-2-3 2zm3 5h8m-8 4h4"/><circle class="isco-loop isco-icon-mark" cx="16.5" cy="14" r="1.75" fill="currentColor" stroke="none"/></svg></span>
+              <div>
+                <p class="founder-case-type">أداة يومية</p>
+                <h4>قبل يفوتك</h4>
+                <p>طوّر إيسكو نسخة أولية تجمع الفواتير والضمانات وتساعد المستخدم يتابع آخر موعد للاسترجاع أو نهاية الضمان.</p>
+              </div>
+            </article>
+            <article class="founder-project-item" data-isco-scene data-motion-enter="once">
+              <span class="isco-project-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><path d="m3 8 9-5 9 5v9l-9 4-9-4Zm0 0 9 4 9-4m-9 4v9"/><path class="isco-loop isco-icon-mark" d="m7.5 5.5 9 4.5v3.5" stroke="#fff0cc"/></svg></span>
+              <div>
+                <p class="founder-case-type">دليل رقمي</p>
+                <h4>موردك</h4>
+                <p>دليل لمورّدي الجملة في السعودية. يسهّل على أصحاب المحلات البحث بحسب المنتج والمدينة والتواصل مع المورد مباشرة.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="founder-vision" aria-labelledby="founder-vision">
+        <div class="isco-vision-sky" data-isco-scene aria-hidden="true">
+          <svg viewBox="0 0 980 260" preserveAspectRatio="xMidYMid slice" focusable="false">
+            <path class="isco-vision-path" d="M-20 234c249 30 280-158 505-132C714 128 698 14 1000 32"/>
+            <path class="isco-loop isco-vision-trace" d="M-20 234c249 30 280-158 505-132C714 128 698 14 1000 32"/>
+            <circle cx="485" cy="102" r="4" fill="#fad09f"/>
+            <circle cx="485" cy="102" r="13" fill="none" stroke="#bd8550"/>
+          </svg>
+        </div>
+        <div class="founder-vision-title">
+          <h2 id="founder-vision" tabindex="-1">رؤية إيسكو <bdi>٢٠٣٠</bdi></h2>
+          <p>يطمح إيسكو إلى بناء منتجات عربية تبدأ من احتياجات يعرفها عن قرب، وتتوسّع كلّما وجد الناس فيها فائدة. في جوّ، البداية مع المضيف والشلّة. وفي لفّه، مع التاجر المحلي والعميل اللي يدور عليه.</p>
+        </div>
+        <ol class="founder-roadmap" aria-label="طريقة تنفيذ رؤية إيسكو">
+          <li data-motion-enter="once"><h3>يبدأ من احتياج واضح</h3><p>يحدّد أول خطوة يحتاجها المستخدم، من بدء جولة إلى الوصول لبائع، ويبسّطها من أول تجربة.</p></li>
+          <li data-motion-enter="once"><h3>يقيس أثر التجربة</h3><p>يتابع وين يتعطّل الناس وإيش يرجعون يستخدمون. هذي الإشارات تحدّد وش يستحق التطوير.</p></li>
+          <li data-motion-enter="once"><h3>يوسّع ما أثبت قيمته</h3><p>يضيف ألعابًا ومسارات بيع لما تظهر الحاجة لها في استخدام الناس وطلبهم.</p></li>
+        </ol>
+      </section>
+
+      <section class="founder-chapter founder-studio" aria-labelledby="founder-collab">
+        <header class="founder-section-head">
+          <h2 id="founder-collab" tabindex="-1">كيف يعمل إيسكو مع العلامات؟</h2>
+          <p>يبدأ من الرسالة اللي تحتاج العلامة توصلها، ثم يختار لها الصورة والنص وطريقة العرض.</p>
+        </header>
+        <div class="founder-services">
+          <details class="isco-details" data-isco-scene>
+            <summary><svg class="icon isco-loop isco-service-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 6h4l2-2h6l2 2h4v13H3z"/><circle cx="12" cy="12" r="3.5"/></svg>التصوير والإنتاج</summary>
+            <p>يبني المشهد حول التفصيلة التي يريد إبرازها في المنتج. في مفهوم «زاوية مختلفة» للسيارات، تقود الإضاءة والحركة عين المشاهد إلى تلك التفصيلة قبل أن تُذكر في التعليق.</p>
+          </details>
+          <details class="isco-details" data-isco-scene>
+            <summary><svg class="icon isco-loop isco-service-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 9h4l12-5v14L7 13H3zm4 4 2 7h3l-2-6m12-6v6"/></svg>المحتوى والتسويق</summary>
+            <p>يصيغ فكرة الحملة من السؤال اللي يهمّ العميل، ويكتب سكربت يبيّن فائدة المنتج من خلال اللقطة.</p>
+          </details>
+          <details class="isco-details" data-isco-scene>
+            <summary><svg class="icon isco-loop isco-service-icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 5h18v14H3zm0 4h18m-11 3-2.5 2 2.5 2m4-4 2.5 2-2.5 2"/></svg>المواقع والتجارب الرقمية</summary>
+            <p>يصمّم إيسكو مسارًا يسهّل على الزائر فهم الخدمة واختيار ما يناسبه، ويقرّبه من الخطوة التالية، سواء كانت طلب تسعيرة أو حجز موعد.</p>
+          </details>
+        </div>
+      </section>
+
+      <footer class="founder-end">
+        <p><svg class="icon" aria-hidden="true"><use href="#icon-crown"/></svg> إيسكو <span lang="en" dir="ltr">ISCO</span></p>
+        <div class="founder-actions">
+          <a class="button isco-button-quiet" href="#home" data-action="home">ارجع إلى جوّ</a>
+          <button class="button isco-button-gold" type="button" data-action="founder-resume" hidden>كمّل جولتك</button>
+        </div>
+      </footer>
+    </article>
+    <section class="play-shell" id="play" aria-label="الجولة الحالية" hidden></section>
+  </main>
+
+  <footer class="shell footer">
+    <div class="signature">
+      <img src="./assets/jaw-wordmark.webp" width="318" height="219" alt="جوّ">
+      <span lang="en" dir="ltr">BY ISCO</span>
+    </div>
+    <a class="founder-link" href="#founder" data-action="founder">
+      <svg class="icon" aria-hidden="true"><use href="#icon-crown"/></svg> من وراء جوّ؟
+    </a>
+  </footer>
+
+  <nav class="mobile-nav" aria-label="تنقّل الجوال">
+    <a href="#home" data-action="home" aria-current="page"><svg class="icon" aria-hidden="true"><use href="#icon-home"/></svg><span>الرئيسية</span></a>
+    <a href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-game"/></svg><span>الألعاب</span></a>
+    <a href="#teams" data-action="teams"><svg class="icon" aria-hidden="true"><use href="#icon-people"/></svg><span>الفرق</span></a>
+    <button type="button" data-action="settings"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg><span>الإعدادات</span></button>
+  </nav>
+
+  <dialog id="modal" class="modal" aria-labelledby="dialog-heading"></dialog>
+  <dialog class="modal tutorial-dialog" id="tutorial" aria-labelledby="tutorial-title">
+    <header class="modal-header">
+      <div><p class="tutorial-label">جولة تدريبية</p><h2 id="tutorial-title"></h2></div>
+      <button class="icon-button" type="button" data-tutorial-command="close" aria-label="إغلاق الشرح">×</button>
+    </header>
+    <div class="tutorial-preview" aria-label="معاينة الجولة"></div>
+    <footer class="tutorial-footer">
+      <div role="status" aria-atomic="true"><span class="tutorial-progress"></span><p class="tutorial-hint"></p></div>
+      <div class="tutorial-tools">
+        <button class="button button-outline" type="button" data-tutorial-command="close">تخطّ الشرح</button>
+        <button class="button button-outline" type="button" data-tutorial-command="previous">السابق</button>
+        <button class="button button-primary" type="button" data-tutorial-command="next">التالي</button>
+      </div>
+    </footer>
+  </dialog>
+  <div class="sr-only" id="notices" role="status" aria-live="polite"></div>
+</body>
+</html>

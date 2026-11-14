@@ -1,0 +1,105 @@
+:root {
+  --motion-instant: 100ms;
+  --motion-press: 150ms;
+  --motion-ui: 210ms;
+  --motion-card: 270ms;
+  --motion-page: 320ms;
+  --motion-modal: 300ms;
+  --motion-reveal: 440ms;
+  --motion-victory: 840ms;
+  --motion-out: cubic-bezier(.19, .73, .24, 1);
+  --motion-spring: cubic-bezier(.22, 1.30, .38, 1);
+  --motion-in-out: cubic-bezier(.42, 0, .58, 1);
+  --motion-press-scale: .98;
+  --motion-card-lift: -4px;
+  --motion-image-scale: 1.07;
+}
+:root[data-motion="full"] {
+  --motion-card: 310ms;
+  --motion-page: 380ms;
+  --motion-modal: 340ms;
+  --motion-reveal: 560ms;
+  --motion-victory: 1050ms;
+  --motion-press-scale: .966;
+}
+:where(button, a[href], input[type="button"], input[type="submit"], summary, [role="button"]) {
+  -webkit-tap-highlight-color: #a876e833;
+  transform-origin: center;
+  transition: scale var(--motion-press) var(--motion-spring), color var(--motion-ui) var(--motion-out),
+    border-color var(--motion-ui) var(--motion-out), background-color var(--motion-ui) var(--motion-out);
+}
+:where(button, a[href], input[type="button"], input[type="submit"], summary, [role="button"]):active:not(:disabled, [aria-disabled="true"], [aria-busy="true"]) {
+  scale: var(--motion-press-scale);
+  transition-duration: var(--motion-instant);
+}
+:where(button, a[href], input, select, textarea, summary, [role="button"]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+:where(input:not([type="radio"], [type="checkbox"]), select, textarea) {
+  transition: border-color var(--motion-ui) var(--motion-out), background-color var(--motion-ui) var(--motion-out);
+}
+:where(input:not([type="radio"], [type="checkbox"]), select, textarea):focus {
+  border-color: var(--bright);
+}
+:where(input, select, textarea):is([aria-invalid="true"], :user-invalid) { border-color: var(--danger); }
+:where(button, [role="button"])[aria-disabled="true"]:not([aria-pressed="true"]) { cursor: default; }
+[data-motion-outcome="win"] .vote-bars li::before { animation: jaw-vote-fill var(--motion-reveal) var(--motion-out) both; }
+@keyframes jaw-vote-fill { from { transform: scaleX(0); } }
+.motion-preference select { inline-size: auto; min-inline-size: 104px; flex: none; }
+:where(button, a[href], [role="button"]):is([aria-pressed="true"], [aria-selected="true"], [aria-current="page"]) { border-color: var(--bright); }
+[data-feedback="success"] { border-color: #76d6bc; }
+[data-feedback="error"] { border-color: var(--danger); }
+:where(button, [role="button"])[aria-busy="true"] { cursor: progress; }
+:where(button, [role="button"])[aria-busy="true"]::after {
+  content: ""; inline-size: .85em; block-size: .85em; margin-inline-start: .3em; display: inline-block;
+  border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%;
+  animation: jaw-loading var(--motion-victory) linear infinite;
+}
+@keyframes jaw-loading { to { transform: rotate(360deg); } }
+:where(details) > summary::marker { color: var(--bright); }
+details[open] > :not(summary) { animation: jaw-appear var(--motion-card) var(--motion-out) both; }
+@keyframes jaw-appear { from { opacity: .45; transform: translateY(5px); } }
+[data-gesture="swipe"] { touch-action: pan-y pinch-zoom; }
+[data-gesture="hold"] { touch-action: manipulation; user-select: none; }
+[data-dragging="true"] { opacity: .65; }
+.motion-modal-exit {
+  position: fixed; z-index: 90; pointer-events: none; border: 1px solid #865cb2;
+  border-radius: 18px; background: #211632; box-shadow: 0 0 20px #9c5fe138;
+}
+[data-motion-outcome="loss"] .result-panel { border-color: #9e658a; }
+[data-motion-outcome="timeout"] .result-panel { border-color: #ac8054; }
+:root[data-motion="reduced"] {
+  --motion-instant: 0ms; --motion-press: 0ms; --motion-ui: 0ms; --motion-card: 0ms;
+  --motion-page: 0ms; --motion-modal: 0ms; --motion-reveal: 0ms; --motion-victory: 0ms;
+  --motion-press-scale: 1;
+  --motion-card-lift: 0px;
+  --motion-image-scale: 1;
+}
+:root[data-motion="reduced"] .motion-modal-exit { display: none; }
+:root[data-motion="reduced"] :where(details[open] > :not(summary), [aria-busy="true"]::after) { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  :root, :root[data-motion="full"] {
+    --motion-instant: 0ms; --motion-press: 0ms; --motion-ui: 0ms; --motion-card: 0ms;
+    --motion-page: 0ms; --motion-modal: 0ms; --motion-reveal: 0ms; --motion-victory: 0ms;
+    --motion-press-scale: 1;
+    --motion-card-lift: 0px;
+    --motion-image-scale: 1;
+  }
+  .motion-modal-exit { display: none; }
+  :root :is(details[open] > :not(summary), [aria-busy="true"]::after) { animation: none; }
+}
+
+@keyframes jaw-founder-intro {
+  from { transform: translateY(12px); opacity: .48; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion="reduced"]) body[data-nav="founder"] [data-isco-intro] {
+    animation: jaw-founder-intro var(--motion-page) var(--motion-out) both;
+    animation-delay: var(--isco-intro-delay, 0ms);
+  }
+}
+.founder-intro h1 { --isco-intro-delay: 70ms; }
+.founder-lead { --isco-intro-delay: 135ms; }
+.founder-intro .founder-actions { --isco-intro-delay: 200ms; }

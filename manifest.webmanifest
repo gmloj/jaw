@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "جوّ | JAW by ISCO",
+  "short_name": "جوّ",
+  "description": "ألعاب عربية للجمعات والرومات من لاعبين إلى ١٠.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f1020",
+  "theme_color": "#0f1020",
+  "icons": [
+    {"src": "./assets/jaw-icon-v2-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./assets/jaw-icon-v2-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "./assets/jaw-icon-v2-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

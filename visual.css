@@ -1,0 +1,210 @@
+/* The visual layer has no hit targets and never changes document layout. */
+:root {
+  --jaw-ambient-strength: .78;
+  --jaw-drift-time: 22s;
+  --jaw-scene-time: 520ms;
+  --jaw-event-time: 780ms;
+  --jaw-particle-size: 4px;
+}
+:root[data-visual-quality="high"] {
+  --jaw-ambient-strength: 1;
+  --jaw-particle-size: 5px;
+}
+:root[data-visual-quality="low"] {
+  --jaw-ambient-strength: .52;
+  --jaw-scene-time: 0ms;
+  --jaw-event-time: 280ms;
+}
+body { isolation: isolate; }
+.jaw-environment {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+.jaw-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    radial-gradient(ellipse 65% 60% at 79% 19%, rgb(var(--scene-a, 151 63 255) / .35), transparent 76%),
+    radial-gradient(ellipse 53% 62% at 15% 82%, rgb(var(--scene-b, 255 146 69) / .23), transparent 77%);
+  transition: opacity var(--jaw-scene-time) var(--motion-in-out, ease-in-out);
+}
+.jaw-layer[data-active="true"] { opacity: var(--jaw-ambient-strength); }
+.jaw-layer::before {
+  content: "";
+  position: absolute;
+  inset: -14%;
+  background:
+    linear-gradient(var(--scene-beam, -19deg), transparent 29%, rgb(var(--scene-a, 151 63 255) / .12) 46%, transparent 58%),
+    radial-gradient(ellipse at 68% 38%, transparent, #0b081d90 78%);
+  animation: jaw-atmosphere-drift var(--jaw-drift-time) var(--motion-in-out, ease-in-out) infinite alternate;
+}
+@keyframes jaw-atmosphere-drift {
+  from { transform: translate(-2%, -2%) rotate(-2deg); opacity: .65; }
+  to { transform: translate(5%, 4%) rotate(4deg); opacity: 1; }
+}
+.jaw-ambient { position: absolute; inset: 0; }
+.jaw-ambient i {
+  --x: calc(9% + 11% * var(--i));
+  position: absolute;
+  inset-inline-start: var(--x);
+  top: 30%;
+  top: var(--y);
+  inline-size: 3px;
+  block-size: 3px;
+  border-radius: 50%;
+  background: #d5a7ff;
+  box-shadow: 0 0 7px #ac66ff;
+  animation: jaw-float calc(13s + var(--i) * 1s) var(--motion-in-out, ease-in-out) infinite alternate;
+  animation-delay: calc(-2s * var(--i));
+}
+.jaw-ambient i:nth-child(even) { background: #ffd295; box-shadow: 0 0 7px #ffab69; }
+:root:not([data-visual-quality="high"]) .jaw-ambient i:nth-child(n+5) { display: none; }
+.jaw-ambient[data-motif]:not([data-motif=""])::before,
+.jaw-ambient[data-motif]:not([data-motif=""])::after {
+  content: attr(data-motif);
+  position: absolute;
+  color: #ad76ff;
+  font-size: clamp(32px, 7vw, 96px);
+  inset-inline-start: 9%;
+  top: 24%;
+  opacity: .14;
+  animation: jaw-motif 18s ease-in-out infinite alternate;
+}
+.jaw-ambient[data-motif]:not([data-motif=""])::after { inset-inline-start: auto; inset-inline-end: 12%; top: 72%; animation-delay: -12s; }
+@keyframes jaw-float {
+  from { transform: translate3d(0, 12px, 0); opacity: .30; }
+  to { transform: translate3d(-16px, -24px, 0); opacity: .72; }
+}
+@keyframes jaw-motif { to { transform: translateY(-28px) rotate(9deg); opacity: .075; } }
+:root[data-atmosphere^="mafia"] .jaw-layer::before {
+  background: linear-gradient(var(--scene-beam), transparent 25%, rgb(var(--scene-a) / .12) 42%, transparent 70%),
+    radial-gradient(ellipse at 72% 70%, rgb(var(--scene-b) / .35), transparent 65%);
+}
+:root[data-atmosphere="court"] .jaw-layer::before {
+  background: repeating-linear-gradient(90deg, transparent 0 14%, #e6ab4814 15%, #a8753233 16%, transparent 18%);
+}
+:root[data-atmosphere="split"] .jaw-layer {
+  background: radial-gradient(ellipse at 15% 49%, rgb(var(--scene-a) / .30), transparent 47%),
+    radial-gradient(ellipse at 90% 61%, rgb(var(--scene-b) / .24), transparent 49%);
+}
+[data-visual-profile="mafia"] .stage-panel { border-color: #884c69; }
+[data-visual-profile="court"] .stage-panel { border-color: #a47d55; }
+[data-visual-profile="split"] .stage-panel { border-color: #69568f; }
+body[data-playing="true"] .stage-panel { background-color: #1c142b; }
+.jaw-event {
+  --event-rgb: 174 90 255;
+  --event-x: 50%;
+  --event-y: 37%;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: jaw-light-event var(--jaw-event-time) ease-out both;
+}
+.jaw-event::before {
+  content: "";
+  position: absolute;
+  left: var(--event-x);
+  top: var(--event-y);
+  inline-size: min(160vw, 1050px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgb(var(--event-rgb) / .32), transparent 63%);
+}
+.jaw-event[data-event="win"], .jaw-event[data-event="achievement"] { --event-rgb: 255 198 86; --jaw-event-time: 1080ms; }
+.jaw-event[data-event="vote"], .jaw-event[data-event="select"] { --event-rgb: 91 206 255; }
+.jaw-event[data-event="timeout"], .jaw-event[data-event="loss"] { --event-rgb: 214 85 83; }
+.jaw-event i {
+  position: absolute;
+  left: var(--event-x);
+  top: var(--event-y);
+  inline-size: var(--jaw-particle-size);
+  block-size: var(--jaw-particle-size);
+  border-radius: 50%;
+  background: rgb(var(--event-rgb));
+  box-shadow: 0 0 8px rgb(var(--event-rgb) / .64);
+  animation: jaw-burst var(--motion-reveal, 440ms) ease-out var(--delay) both;
+}
+.jaw-event[data-event="win"] i {
+  inline-size: 5px;
+  block-size: 9px;
+  border-radius: 2px;
+  animation-duration: var(--motion-victory, 840ms);
+}
+.jaw-event[data-event="win"] i:nth-child(3n) { background: #b787ff; }
+@keyframes jaw-light-event { from { opacity: .8; } to { opacity: 0; } }
+@keyframes jaw-burst {
+  from { opacity: .84; transform: translate3d(0, 0, 0) rotate(0deg); }
+  to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) rotate(130deg); }
+}
+.jaw-countdown {
+  position: fixed;
+  inset-inline-end: max(16px, env(safe-area-inset-right));
+  inset-block-end: max(32px, env(safe-area-inset-bottom));
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  border: 1px solid #b98ce6;
+  border-radius: 50%;
+  background: #231434;
+  color: #ffe1a0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+.jaw-countdown > span { animation: jaw-count 270ms ease-out both; }
+@keyframes jaw-count { from { opacity: .45; transform: translateY(4px) scale(.9); } }
+.jaw-intro-logo { filter: drop-shadow(0 0 6px #b66cff73); }
+:root[data-visual-quality="low"] .jaw-event { --jaw-event-time: 280ms; }
+:root[data-visual-quality="low"] .jaw-layer::before { animation: none; opacity: .46; }
+:root[data-visual-quality="low"] :is(.jaw-ambient, .jaw-countdown) { display: none; }
+:root[data-visual-paused] :is(.jaw-layer::before, .jaw-ambient i, .jaw-ambient::before, .jaw-ambient::after) { animation-play-state: paused; }
+:root[data-motion="reduced"] :is(.jaw-layer, .jaw-layer::before) { transition: none; animation: none; }
+:root[data-motion="reduced"] :is(.jaw-ambient, .jaw-event, .jaw-countdown) { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .jaw-layer, .jaw-layer::before { transition: none; animation: none; }
+  .jaw-ambient, .jaw-event, .jaw-countdown { display: none; }
+}
+
+.jaw-layer[data-idle="true"]::before { animation-play-state: paused; }
+body:has(.modal[open]) .jaw-environment { opacity: .68; }
+body:has(.modal[open]) :is(.jaw-layer::before, .jaw-ambient i, .jaw-ambient::before, .jaw-ambient::after) { animation-play-state: paused; }
+[data-jaw-light] { --jaw-edge: #bc86ffc4; animation: jaw-edge-light var(--jaw-event-time) ease-out both; }
+[data-jaw-light="select"], [data-jaw-light="vote"] { --jaw-edge: #68d7ffb0; }
+[data-jaw-light="win"], [data-jaw-light="achievement"] { --jaw-edge: #f5c477c9; }
+[data-jaw-light="loss"], [data-jaw-light="timeout"] { --jaw-edge: #e8777a9e; }
+@keyframes jaw-edge-light {
+  from { outline: 2px solid var(--jaw-edge); outline-offset: 1px; }
+  to { outline: 2px solid transparent; outline-offset: 4px; }
+}
+[data-jaw-light]:focus-visible { animation: none; }
+:root[data-motion="reduced"] [data-jaw-light] { animation: none; }
+@media (prefers-reduced-motion: reduce) { [data-jaw-light] { animation: none; } }
+
+.jaw-campfire { display: none; }
+@media (max-width: 639px) {
+  .jaw-campfire {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    object-position: center 65%;
+    opacity: 0;
+    transition: opacity var(--jaw-scene-time) ease-out;
+    pointer-events: none;
+  }
+  .jaw-campfire[data-ready] { opacity: 1; }
+  :root[data-visual-quality="low"] .jaw-campfire[data-ready] { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jaw-campfire { display: none; }
+}
