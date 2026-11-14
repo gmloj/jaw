@@ -1,6 +1,6 @@
 import {
   addAnonymousQuestion, addReverseEntry, advanceAnswer, advanceCard, advanceCourt,
-  beginDiscussion, beginVote, castVote, configureSession, createSession, finishNight,
+  beginChoiceRating, nextChoicePrompt, rateChoice, beginDiscussion, beginVote, castVote, configureSession, createSession, finishNight,
   nightTurn, openAnonymousQuestion, openEvidenceClue, recordChallenge, recordKnowAnswer,
   recordKnowGuess, recordNightChoice, resolveEvidence, selectChoice, startClock, startGame,
 } from './engine.js';
@@ -87,7 +87,13 @@ const lessons = {
   choice(session, show) {
     show('.choice-pair', 'اضغط على أحد الخيارين، وبعدها قول ليش اخترته.');
     selectChoice(session, 0);
-    show(action('choice-next'), 'إذا خلصتوا السالفة، افتحوا السؤال اللي بعده.');
+    show(action('choice-rate-start'), 'قول ليش اخترت كذا، وبعدها خلّ الشلّة تقيّم تبريرك.');
+    beginChoiceRating(session);
+    show(action('choice-rate'), 'سجّل تقييم كل لاعب من صفر إلى نقطتين.');
+    rateChoice(session, session.round.order[1], 2);
+    show(submit('choice-next-form'), 'بعد ما تشوف نقاط التبرير، اضغط السؤال التالي.');
+    nextChoicePrompt(session, () => .42);
+    show('.choice-question', 'انتقل الدور للي بعدك تلقائيًا. لكل لاعب دور في الجولة.');
   },
   anonymous(session, show) {
     show('#anonymous-recipient', 'اختر مين موجّه له السؤال.');

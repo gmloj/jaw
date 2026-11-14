@@ -1,3 +1,4 @@
+import { choiceCategories, choiceDurations, choiceLevels, choiceSettings, choiceTurns, choiceVoter } from './choice-engine.js';
 import { teamAssignment, teamRoundPanel, teamSetupFields } from './team-views.js';
 import { teamKinds } from './team-engine.js';
 import { evidenceCases } from './party-content.js';
@@ -50,6 +51,35 @@ export function gameRules(kind) {
   return `<ol class="rules-list">${games[kind].rules.map((rule) => '<li>' + escape(rule) + '</li>').join('')}</ol>`;
 }
 
+function choiceCategoryOptions(selected, includeBlack = true) {
+  return [['mixed', 'مختلط'], ...Object.entries(choiceCategories)]
+    .filter(([id]) => id !== 'black' || includeBlack)
+    .map(([id, title]) => `<option value="${id}" ${id === selected ? 'selected' : ''}>${title}</option>`).join('');
+}
+
+function choiceSetupFields(draft) {
+  const settings = choiceSettings(draft);
+  return `<fieldset class="choice-field choice-settings">
+    <legend>إعدادات التحدّي</legend>
+    <label class="field-label">القسم
+      <select class="field" name="category">${choiceCategoryOptions(settings.category)}</select>
+    </label>
+    <label class="field-label">الحد الأعلى للجرأة
+      <select class="field" name="boldness">${choiceLevels.map((label, index) =>
+        `<option value="${index + 1}" ${index + 1 === settings.boldness ? 'selected' : ''}>${label}</option>`).join('')}</select>
+    </label>
+    <label class="field-label">عدد الجولات
+      <select class="field" name="turns">${choiceTurns.map((value) =>
+        `<option value="${value}" ${value === settings.turns ? 'selected' : ''}>${number(value)}</option>`).join('')}</select>
+    </label>
+    <label class="field-label">مؤقّت الإجابة
+      <select class="field" name="duration">${choiceDurations.map((value) =>
+        `<option value="${value}" ${value === settings.duration ? 'selected' : ''}>${value ? number(value) + ' ثانية' : 'بدون مؤقّت'}</option>`).join('')}</select>
+    </label>
+    <p class="small muted">دور واحد لكل لاعب في الجولة. المستوى الأسود يفتح أقوى الأسئلة في المختلط.</p>
+  </fieldset>`;
+}
+
 export function setupView(draft, canResume) {
   const game = games[draft.kind];
   const hasTimer = timeGames.includes(draft.kind);
@@ -78,13 +108,14 @@ export function setupView(draft, canResume) {
         ['remote', 'روم صوتي', 'أرسل البطاقات بالخاص'],
       ], draft.mode)}
       ${draft.kind === 'outsider' ? choiceGroup('difficulty', 'مستوى الكلمات', Object.entries(difficulties), draft.difficulty) : ''}
+      ${draft.kind === 'choice' ? choiceSetupFields(draft) : ''}
       ${hasTimer ? `<label class="field-label timer-picker">${draft.kind === 'court' ? 'مؤقّت المرافعات' : 'مؤقّت النقاش'}
         <select class="field" name="duration">${discussionDurations.map((value) =>
           `<option value="${value}" ${value === draft.duration ? 'selected' : ''}>${value ? number(value) + ' ثانية' : 'بدون مؤقّت'}</option>`).join('')}</select>
       </label>` : ''}
       <p class="form-message" id="setup-error" role="alert"></p>
       <div class="setup-actions">
-        ${submit(playIcon + ' ابدأ الجولة')}
+        ${submit(playIcon + (draft.kind === 'choice' ? ' ابدأ التحدي' : ' ابدأ الجولة'))}
         ${canResume ? button('close', 'ارجع للجولة', 'outline') : ''}
       </div>
     </form>`;
@@ -383,6 +414,7 @@ function voteList(session) {
 
 function renderResult(session) {
   const { round } = session;
+  if (round.kind === 'choice') return renderChoiceResult(session);
   if (round.kind === 'evidence') return renderEvidenceResult(session);
   if (round.kind === 'reverse') return renderReverseResult(session);
   if (round.kind === 'know') return renderKnowResult(session);
@@ -427,21 +459,70 @@ function renderResult(session) {
 }
 
 function renderChoice(session) {
-  const { prompt, selected } = session.round;
+  const { round } = session;
+  const { question, selected, skips, phase, order, votes, scores, settings, turn, outcome } = round;
+  const id = order[round.index];
   const picked = selected !== null;
-  return panel('لو خيروك؟', `
-    <div class="choice-pairs" role="group" aria-label="الخياران">
-      ${prompt.map((answer, index) => `
-        <button class="choice-pair" type="button" data-action="choice-pick" data-option="${index}"
+  const isReview = phase === 'choice-review';
+  const isRating = phase === 'choice-rating';
+  const finalTurn = turn + 1 === order.length * settings.turns;
+  const questionCards = phase === 'picking' || phase === 'choice-explain';
+  const earned = votes.reduce((total, points) => total + points, 0);
+  return panel('الدور على ' + name(session, id), `
+    ${step('الجولة', Math.floor(turn / order.length) + 1, settings.turns)}
+    <div class="choice-meta"><span>الدور ${number(round.index + 1)} من ${number(order.length)}</span>
+      <span>${number(scores[id])} نقطة</span></div>
+    <div class="prompt-box choice-question"><small>لو خيروك؟</small><h2>${escape(question.text)}</h2></div>
+    ${questionCards ? `<div class="choice-pairs" role="group" aria-label="الخياران">
+      ${question.options.map((answer, index) =>
+        `<button class="choice-pair" type="button" data-action="choice-pick" data-option="${index}"
           aria-pressed="${selected === index}" aria-disabled="${picked}">
-          <small>${choiceLabels[index]}</small>
-          <strong>${escape(answer)}</strong>
+          <small>${choiceLabels[index]}</small><strong>${escape(answer)}</strong>
         </button>`).join('')}
-    </div>
-    <div class="actions choice-controls">
-      ${picked ? button('choice-next', 'السؤال اللي بعده') : '<p class="muted">اضغط على الخيار اللي تختاره.</p>'}
-    </div>
+    </div>` : picked ? `<p class="choice-answer">الاختيار <strong>${escape(question.options[selected])}</strong></p>` : ''}
+    ${phase === 'picking' ? clockView(session) : ''}
+    ${isRating ? `<section class="choice-rating" aria-label="تقييم التبرير">
+      ${step('تقييم الشلّة', votes.length + 1, order.length - 1)}
+      <p>تقييم ${name(session, choiceVoter(round))} لتبرير الاختيار</p>
+      <div class="actions choice-ratings">${['ما أقنعني', 'مقنع', 'صريح وقوي'].map((label, points) =>
+        button('choice-rate', label + ' · ' + number(points), 'outline', `data-voter="${choiceVoter(round)}" data-points="${points}"`)).join('')}</div>
+    </section>` : ''}
+    ${isReview ? `
+      <p class="choice-review">${outcome === 'rated' ? `نقاط التبرير <strong>+${number(earned)}</strong>` :
+        outcome === 'timeout' ? 'انتهى الوقت. هذا الدور بدون نقاط.' : 'تخطّيتوا الدور. ما انحسبت نقاط.'}</p>
+      <form id="choice-next-form" class="choice-next-form">
+        ${finalTurn ? '' : `<label class="field-label timer-picker">قسم السؤال التالي
+          <select class="field" name="category">${choiceCategoryOptions(settings.category, settings.boldness === 3)}</select>
+        </label>`}
+        <div class="actions">${submit(finalTurn ? 'اعرض النتائج' : 'السؤال التالي')}</div>
+      </form>` : ''}
+    ${questionCards ? `<div class="actions choice-controls">
+      ${picked ? button('choice-rate-start', 'ابدأ التصويت') : ''}
+      ${button('choice-skip', 'تخطي · ' + number(skips) + ' باقي', 'outline', skips ? '' : 'disabled')}
+    </div>${picked ? '<p>قل للشلّة ليش اخترت كذا.</p>' : ''}` : ''}
+    <details class="rules choice-scores"><summary>لوحة النقاط</summary>
+      ${scoreList(session, order.map((player) => [player, number(scores[player])]))}
+    </details>
   `, 'stage-center choice-stage');
+}
+
+function renderChoiceResult(session) {
+  const { order, scores } = session.round;
+  const ranked = [...order].sort((a, b) => scores[b] - scores[a]);
+  const top = scores[ranked[0]];
+  const leaders = ranked.filter((id) => scores[id] === top);
+  const title = top === 0 ? 'خلص التحدّي' : leaders.length === 1
+    ? name(session, leaders[0]) + ' في المركز الأول'
+    : 'تعادل في المركز الأول';
+  return panel(title, `
+    <ol class="score-list choice-leaderboard">${ranked.map((id, index) => {
+      const rank = ranked.findIndex((player) => scores[player] === scores[id]) + 1;
+      return `<li${index === 0 && top > 0 ? ' class="choice-first"' : ''}><span>
+        <span class="choice-rank" aria-label="المركز ${number(rank)}">${number(rank)}</span> ${name(session, id)}</span>
+        <strong>${number(scores[id])} نقطة</strong></li>`;
+    }).join('')}</ol>
+    <div class="actions">${button('choice-start', 'تحدّي جديد')}${button('games', 'اختاروا لعبة ثانية', 'outline')}</div>
+  `, 'stage-center result-panel choice-stage');
 }
 
 function renderAnonymous(session) {
@@ -486,14 +567,15 @@ function renderAnonymous(session) {
 const stageViews = {
   investigating: renderEvidence, composing: renderReverse, knowAnswer: renderKnow, knowGuesses: renderKnow, knowReveal: renderKnow,
   cards: renderCards, questions: renderQuestions, hearing: renderHearing, answers: renderAnswers, discussion: renderDiscussion, voting: renderVote,
-  runoff: renderRunoff, picking: renderChoice, anonymous: renderAnonymous, day: renderDay, dayResult: renderDayResult, turn: renderChallenge, result: renderResult,
+  runoff: renderRunoff, picking: renderChoice, 'choice-explain': renderChoice, 'choice-rating': renderChoice,
+  'choice-review': renderChoice, anonymous: renderAnonymous, day: renderDay, dayResult: renderDayResult, turn: renderChallenge, result: renderResult,
 };
 
 export function roundView(session, { privateVisible = false, nightUnlocked = false } = {}) {
   const { round, mode } = session;
   const teams = teamKinds.includes(round.kind);
   const difficulty = round.kind === 'outsider' ? ' · ' + difficulties[round.settings.difficulty] : '';
-  const badge = teams ? 'فريق ضد فريق' : round.kind === 'choice' ? round.theme || 'اختيار مباشر' :
+  const badge = teams ? 'فريق ضد فريق' : round.kind === 'choice' ? choiceCategories[round.question.category] || 'لو خيروك' :
     games[round.kind].hostOnly ? 'جهاز المدير' : mode === 'remote' ? 'روم صوتي' : 'جهاز واحد';
   return `<div class="round-content" data-kind="${round.kind}" data-phase="${round.phase}">
     <div class="stage-nav">
@@ -502,7 +584,7 @@ export function roundView(session, { privateVisible = false, nightUnlocked = fal
       <div class="stage-tools">
         ${button('tutorial', 'شرح اللعبة', 'outline button-compact', `data-kind="${round.kind}"`)}
         ${button('help', '<svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg>', 'outline button-icon', 'aria-label="قواعد اللعبة" title="قواعد اللعبة"')}
-        ${button(teams ? 'teams' : 'games', ['result', 'team-result'].includes(round.phase) || round.kind === 'choice' ? (teams ? 'ألعاب الفرق' : 'الألعاب') : 'إنهاء الجولة', 'outline button-compact')}
+        ${button(teams ? 'teams' : 'games', ['result', 'team-result'].includes(round.phase) ? (teams ? 'ألعاب الفرق' : 'الألعاب') : 'إنهاء الجولة', 'outline button-compact')}
       </div>
     </div>
     ${roundPanel(session, { privateVisible, nightUnlocked })}

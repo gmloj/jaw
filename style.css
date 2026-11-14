@@ -751,3 +751,25 @@ textarea.field { margin-block-start: 8px; resize: vertical; min-height: 110px; }
   .stage-nav { flex-wrap: wrap; }
   .tutorial-tools .button { padding-inline: 9px; }
 }
+
+.choice-settings {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px;
+}
+.choice-settings .field-label, .choice-next-form .field { min-inline-size: 0; }
+.choice-settings select { display: block; width: 100%; margin-block-start: 4px; }
+.choice-settings > p { grid-column: 1 / -1; margin: 0; }
+.choice-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .85rem; margin-block-start: 8px; }
+.choice-stage .choice-question { margin-block: 16px 0; padding: 16px; overflow-wrap: anywhere; }
+.choice-question small { display: block; color: #dfbbff; font-size: .85rem; }
+.choice-question h2 { margin-block-start: 4px; font-size: clamp(1.18rem, 5vw, 1.7rem); line-height: 1.45; }
+.choice-stage .choice-answer { margin-block: 12px; }
+.choice-answer strong { display: block; color: var(--ink); }
+.choice-rating, .choice-review, .choice-scores { margin-block-start: 16px; }
+.choice-ratings { margin-block-start: 8px; }
+.choice-review strong, .choice-first strong { color: #ffd595; }
+.choice-next-form > .actions { margin-block-start: 8px; }
+.choice-leaderboard { list-style: none; padding: 0; }
+.choice-rank { display: inline-grid; place-items: center; min-inline-size: 28px; margin-inline-end: 4px; color: #dfbbff; }
+@media (max-width: 374px) {
+  .choice-settings { grid-template-columns: minmax(0, 1fr); }
+}

@@ -34,6 +34,7 @@ export function resultFeedback(round, evidenceAnswer) {
         case 'reverse':
             return round.votes?.some((vote) => vote !== null) ? 'win' : 'round';
         case 'challenge':
+        case 'choice':
         case 'know':
             return Object.values(round.scores ?? {}).some((points) => points > 0) ? 'win' : 'round';
         default:

@@ -1,6 +1,7 @@
 import { makeTeamGame, teamKinds, teamRoundIsValid } from './team-engine.js';
 import { challenges, courtCases, difficulties, games, liarQuestions, pairBanks, pairs, roles, socialPrompts } from './content.js';
-import { choiceThemes } from './choice-questions.js';
+import { choiceSettings, makeChoiceRound, restoreChoiceRound } from './choice-engine.js';
+export { beginChoiceRating, expireChoice, nextChoicePrompt, rateChoice, selectChoice, skipChoice } from './choice-engine.js';
 import { evidenceCases, reversePrompts, knowPrompts } from './party-content.js';
 
 export const maxPlayers = 10;
@@ -11,16 +12,11 @@ export const evidenceDuration = 120_000;
 export const evidenceClueLimit = 3;
 export const reverseQuestionLimit = 220;
 const sessionVersion = 4;
-const choiceDeck = choiceThemes.flatMap(({ label, prompts }, theme) =>
-  prompts.map((prompt) => ({ prompt, label, theme })),
-);
-const choiceIndexes = choiceDeck.map((_, index) => index);
 const phases = {
   outsider: ['cards', 'questions', 'discussion', 'voting', 'runoff', 'result'],
   mafia: ['cards', 'night', 'day', 'voting', 'dayResult', 'result'],
   court: ['hearing', 'voting', 'result'],
   liar: ['cards', 'answers', 'discussion', 'voting', 'runoff', 'result'],
-  choice: ['picking'],
   anonymous: ['anonymous'],
   social: ['discussion', 'voting', 'result'],
   challenge: ['turn', 'result'],
@@ -75,6 +71,7 @@ export function leaveRound(session) {
 }
 
 function settingsFor(kind, options) {
+  if (kind === 'choice') return choiceSettings(options);
   const difficulty = Object.hasOwn(difficulties, options?.difficulty) ? options.difficulty : defaultOptions.difficulty;
   const fallback = kind === 'mafia' ? 90 : defaultOptions.duration;
   const duration = discussionDurations.includes(options?.duration) ? options.duration : fallback;
@@ -83,10 +80,7 @@ function settingsFor(kind, options) {
 
 function restoreRound(saved, players) {
   let round = saved.round;
-  if (round?.kind === 'choice' && saved.version < 3 && ['discussion', 'voting', 'result'].includes(round.phase)) {
-    // Keep the question from an older group round and open it for a direct choice.
-    round = { ...round, phase: 'picking', index: 0, selected: null, votes: [] };
-  }
+  if (round?.kind === 'choice') return restoreChoiceRound(round, players, saved.version);
   if (teamKinds.includes(round?.kind)) {
     if (!teamRoundIsValid(round)) return null;
     const roster = round.team.squads.flatMap((squad) => squad.players);
@@ -118,8 +112,6 @@ function restoreRound(saved, players) {
   }
   if (round.kind === 'liar' && (typeof round.fakePrompt !== 'string' || !round.order.includes(round.liarId) ||
       (round.phase === 'result' && !['group', 'liar'].includes(round.ending)))) return null;
-  if (round.kind === 'choice' && (!Array.isArray(round.prompt) || round.prompt.length !== 2 ||
-      !round.prompt.every((item) => typeof item === 'string' && item.trim()) || ![null, 0, 1].includes(round.selected))) return null;
   if (round.kind === 'anonymous') {
     if (!Array.isArray(round.questions) || !round.questions.every((card) =>
       card && round.order.includes(card.recipient) && validAnonymousQuestion(card.question) && typeof card.opened === 'boolean'
@@ -164,7 +156,7 @@ export function restoreSession(saved) {
   for (const kind of Object.keys(games)) {
     // Saved prompts can resume, but old question indexes point into different decks.
     const sameBank = kind === 'outsider' || saved.version === sessionVersion;
-    if (sameBank && Array.isArray(saved.seen?.[kind])) session.seen[kind] = saved.seen[kind].filter(Number.isInteger);
+    if (kind !== 'choice' && sameBank && Array.isArray(saved.seen?.[kind])) session.seen[kind] = saved.seen[kind].filter(Number.isInteger);
     if (saved.options?.[kind]) session.options[kind] = settingsFor(kind, saved.options[kind]);
   }
   if (Array.isArray(saved.outsiderHistory)) session.outsiderHistory = saved.outsiderHistory.filter(Number.isInteger).slice(-maxPlayers);
@@ -180,16 +172,6 @@ function draw(session, key, bank, random) {
   const domain = bank.map((_, index) => index);
   const index = pickUnused(session, key, domain, random);
   return bank[index];
-}
-
-function drawChoice(session, random) {
-  const history = session.seen.choice ?? [];
-  const previous = choiceDeck[history.at(-1)];
-  const theme = previous ? (previous.theme + 1) % choiceThemes.length : 0;
-  // The next theme always differs, including when a full deck starts over.
-  if (history.length === choiceDeck.length) session.seen.choice = [];
-  const index = pickUnused(session, 'choice', choiceIndexes, random, (candidate) => choiceDeck[candidate].theme === theme);
-  return choiceDeck[index];
 }
 
 function pickUnused(session, key, domain, random, filter = () => true) {
@@ -247,6 +229,13 @@ export function startGame(session, kind, random = Math.random, options = session
   }
   const order = session.players.map((player) => player.id);
   const settings = settingsFor(kind, options);
+  if (kind === 'choice') {
+    const match = makeChoiceRound(order, settings, random);
+    if (!match) return false;
+    session.options.choice = settings;
+    session.round = match;
+    return true;
+  }
   const round = { kind, order, settings, phase: 'cards', index: 0, votes: [] };
   switch (kind) {
     case 'outsider':
@@ -276,14 +265,6 @@ export function startGame(session, kind, random = Math.random, options = session
       if (random() >= 0.5) [round.prompt, round.fakePrompt] = [round.fakePrompt, round.prompt];
       round.liarId = choose(order, random);
       break;
-    case 'choice': {
-      const { prompt, label } = drawChoice(session, random);
-      round.phase = 'picking';
-      round.prompt = prompt;
-      round.theme = label;
-      round.selected = null;
-      break;
-    }
     case 'anonymous':
       round.phase = 'anonymous';
       round.questions = [];
@@ -491,18 +472,6 @@ export function nextSocialPrompt(session, random = Math.random) {
   round.votes = [];
   round.index = 0;
   return true;
-}
-
-export function selectChoice(session, option) {
-  const round = session.round;
-  if (round?.kind !== 'choice' || round.phase !== 'picking' || round.selected !== null || (option !== 0 && option !== 1)) return false;
-  round.selected = option;
-  return true;
-}
-
-export function nextChoicePrompt(session, random = Math.random) {
-  if (session.round?.kind !== 'choice' || session.round.phase !== 'picking' || session.round.selected === null) return false;
-  return startGame(session, 'choice', random);
 }
 
 function validAnonymousQuestion(question) {

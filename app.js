@@ -7,6 +7,7 @@ import { createMotion } from './motion/controller.js';
 import { createTutorial } from './tutorial.js';
 import { motionPreferences, feedbackForAction, resultFeedback } from './motion/policy.js';
 import {
+  beginChoiceRating, expireChoice, rateChoice, skipChoice,
   addReverseEntry, advanceKnow, openEvidenceClue, recordKnowAnswer, recordKnowGuess, resolveEvidence,
   addAnonymousQuestion, advanceAnswer, advanceCard, advanceCourt, advanceQuestion, beginDiscussion, beginVote, castVote, clockRemaining,
   closeAnonymousQuestion, openAnonymousQuestion,
@@ -198,10 +199,11 @@ function openSetup(kind, opener) {
   draft = {
     kind,
     count: Math.max(game.min, session.players.length),
-    names: [],
+    names: kind === 'choice' ? session.players.map((player) => player.name) : [],
     mode: session.mode,
     difficulty: settings?.difficulty ?? 'mixed',
-    duration: settings?.duration ?? (kind === 'mafia' ? 90 : 60),
+    duration: settings?.duration ?? (kind === 'choice' ? 0 : kind === 'mafia' ? 90 : 60),
+    ...(kind === 'choice' ? { category: settings?.category, boldness: settings?.boldness, turns: settings?.turns } : {}),
   };
   if (teamKinds.includes(kind)) {
     const current = session.round?.kind === kind ? session.round.team : null;
@@ -210,7 +212,7 @@ function openSetup(kind, opener) {
     draft.teamNames = current?.squads.map((squad) => squad.name) ?? ['فريق البنفسجي', 'فريق الذهبي'];
     draft.teamTurns = current?.turns ?? 2;
   }
-  openModal('إعداد ' + game.title, setupView(draft, Boolean(session.round)), opener);
+  openModal(kind === 'choice' ? game.title + ' 🔥' : 'إعداد ' + game.title, setupView(draft, Boolean(session.round)), opener);
   modal.dataset.visualProfile = game.visualProfile ?? 'jaw';
   visuals.atmosphere(game.visualProfile);
   updateCountControls();
@@ -288,7 +290,7 @@ function askToLeave(target, opener) {
     return;
   }
   leaveTo = target;
-  if (['result', 'team-result'].includes(session.round.phase) || session.round.kind === 'choice') {
+  if (['result', 'team-result'].includes(session.round.phase)) {
     endRound(target);
     return;
   }
@@ -372,11 +374,15 @@ function updateClock() {
   if (running) clockInterval ??= window.setInterval(updateClock, 200);
   else clearClockInterval();
   const late = seconds === 0;
+  if (late && session.round.kind === 'choice' && expireChoice(session)) {
+    changeRound('timeout');
+    return;
+  }
   if (late && session.round.kind === 'evidence' && resolveEvidence(session, null)) {
     changeRound('timeout');
     return;
   }
-  const label = late ? 'انتهى الوقت' : running ? 'الوقت يمشي' : state.started ? 'موقوف مؤقتًا' : session.round.kind === 'challenge' ? 'جهّز اللاعب للبدء' : 'وقت النقاش جاهز';
+  const label = late ? 'انتهى الوقت' : running ? 'الوقت يمشي' : state.started ? 'موقوف مؤقتًا' : session.round.kind === 'challenge' ? 'جهّز اللاعب للبدء' : session.round.kind === 'choice' ? 'مؤقّت الإجابة جاهز' : 'وقت النقاش جاهز';
   const toggle = document.querySelector('#clock-toggle');
   const hint = document.querySelector('#clock-hint');
   clock.dataset.running = running;
@@ -507,6 +513,15 @@ function beginSetup(data) {
   });
   const next = { ...session, round: null };
   const options = { duration: Number(data.get('duration')), difficulty: data.get('difficulty') };
+  if (kind === 'choice') {
+    options.category = data.get('category');
+    options.boldness = Number(data.get('boldness'));
+    options.turns = Number(data.get('turns'));
+    if (options.category === 'black' && options.boldness !== 3) {
+      showFormError('#setup-error', 'اختر مستوى الجرأة الأسود عشان تلعب بهذا القسم.');
+      return;
+    }
+  }
   if (teamKinds.includes(kind)) {
     options.names = [0, 1].map((side) => String(data.get('team-name-' + side) ?? '').trim().replace(/\s+/g, ' ') || draft.teamNames[side]);
     options.turns = Number(data.get('team-turns'));
@@ -674,11 +689,7 @@ function handleAction(control) {
       tutorial.open(kind);
       break;
     case 'choice-start':
-      rememberGames(control);
-      if (startGame(session, 'choice')) {
-        changeRound();
-        tutorial.open('choice', true);
-      }
+      openSetup('choice', control);
       break;
     case 'choice-pick':
       if (selectChoice(session, Number(control.dataset.option))) {
@@ -759,8 +770,14 @@ function handleAction(control) {
     case 'social-next':
       if (nextSocialPrompt(session)) changeRound();
       break;
-    case 'choice-next':
-      if (nextChoicePrompt(session)) changeRound();
+    case 'choice-rate-start':
+      if (beginChoiceRating(session)) changeRound();
+      break;
+    case 'choice-rate':
+      if (rateChoice(session, Number(control.dataset.voter), Number(control.dataset.points))) changeRound('vote');
+      break;
+    case 'choice-skip':
+      if (skipChoice(session)) changeRound();
       break;
     case 'evidence-clue': {
       const index = Number(control.dataset.clue);
@@ -836,6 +853,9 @@ document.addEventListener('submit', (event) => {
     case 'setup-form':
       beginSetup(data);
       break;
+    case 'choice-next-form':
+      if (nextChoicePrompt(session, Math.random, data.get('category') ?? undefined)) changeRound('reveal');
+      break;
     case 'team-bid-form':
       playTeamAction('bid', Number(data.get('bid')));
       break;
@@ -886,6 +906,9 @@ modal.addEventListener('change', (event) => {
   const input = event.target;
   if (input.name === 'count' && draft) {
     setPlayerCount(Number(input.value));
+  }
+  if (draft?.kind === 'choice' && input.name === 'category' && input.value === 'black') {
+    input.form.elements.boldness.value = '3';
   }
   if (draft?.assignments && input.dataset.teamAssignment !== undefined) {
     draft.assignments[Number(input.dataset.teamAssignment)] = Number(input.value);
