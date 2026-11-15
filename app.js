@@ -17,6 +17,7 @@ import {
 import { button, defaultPlayerName, gameRules, nameFields, number, roundView, setupView } from './views.js';
 import { activateUpdate, enableOffline, hasUpdate, installed, requestInstall } from './offline.js';
 import { mountWelcome } from './welcome.js';
+import { discoveryResults, discoverySearch, renderDiscovery } from './home-discovery.js';
 
 const sessionKey = 'aljumaa-session-v1';
 const settingsKey = 'jaw-preferences';
@@ -211,7 +212,7 @@ function updateInstall() {
   document.querySelector('#install-top').hidden = installed();
 }
 
-function openSetup(kind, opener) {
+function openSetup(kind, opener, mode = session.mode) {
   const game = games[kind];
   if (!game) return;
   const settings = session.options[kind];
@@ -219,7 +220,7 @@ function openSetup(kind, opener) {
     kind,
     count: Math.max(game.min, session.players.length),
     names: ['choice', 'hideout'].includes(kind) ? session.players.map((player) => player.name) : [],
-    mode: session.mode,
+    mode,
     difficulty: settings?.difficulty ?? 'mixed',
     duration: settings?.duration ?? (kind === 'choice' ? 0 : kind === 'mafia' ? 90 : 60),
     ...(kind === 'choice' ? { category: settings?.category, boldness: settings?.boldness, turns: settings?.turns } : {}),
@@ -280,6 +281,9 @@ function renderBrowse(target, { initial = false, push = false, quick = false } =
   document.body.dataset.nav = target;
   document.title = target === 'founder' ? 'بصمة إيسكو | جوّ' : siteTitle;
   document.querySelector('[data-action="founder-resume"]').hidden = !session.round;
+  const homeResume = document.getElementById('home-resume');
+  homeResume.hidden = !session.round;
+  homeResume.querySelector('span').textContent = session.round ? games[session.round.kind].title : '';
   for (const link of document.querySelectorAll('.nav a, .mobile-nav a, .founder-link')) {
     if (link.dataset.action === target) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
@@ -297,14 +301,14 @@ function renderBrowse(target, { initial = false, push = false, quick = false } =
     window.scrollTo({ top: origin.y, behavior: 'instant' });
     return;
   }
-  const heading = document.getElementById(quickLink ? 'quick-title' : target + '-title');
+  const heading = document.getElementById(quickLink ? 'quick-title' : target === 'home' ? 'discovery-title' : target + '-title');
   if (!initial) (heading ?? document.querySelector('.brand')).focus({ preventScroll: true });
   if (quickLink) heading.scrollIntoView({ block: 'start', behavior: 'instant' });
   else window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function askToLeave(target, opener) {
-  if (!session.round || target === 'founder') {
+  if (!session.round || stage.hidden || target === 'founder') {
     renderBrowse(target, { push: true });
     return;
   }
@@ -318,6 +322,7 @@ function askToLeave(target, opener) {
     <p class="muted">${session.round.kind === 'anonymous' ? 'تنحذف بطاقات هالجولة، وتبقى أسماء الشلّة.' : 'أسماء الشلّة وإعدادات اللعبة بتبقى عندك.'}</p>
     <div class="actions">
       ${button('close', 'كمّل اللعب', 'outline')}
+      ${target === 'home' ? button('home-save-round', 'احفظ وارجع للرئيسية', 'quiet') : ''}
       ${button('confirm-exit', 'إنهاء الجولة', 'danger')}
     </div>
   `, opener);
@@ -739,8 +744,27 @@ function handleAction(control) {
     case 'close':
       closeModal();
       break;
+    case 'home-search': {
+      const { title, body } = discoverySearch(control.dataset.filter);
+      openModal(title, body, control, 'discovery');
+      if (!control.dataset.filter) modal.querySelector('#discovery-query').focus({ preventScroll: true });
+      break;
+    }
+    case 'home-jump': {
+      const heading = document.getElementById(control.dataset.target);
+      heading?.focus({ preventScroll: true });
+      heading?.scrollIntoView({ block: 'start', behavior: motion.reduced ? 'instant' : 'smooth' });
+      break;
+    }
+    case 'home-save-round':
+      closeModal();
+      nightUnlocked = false;
+      roundOrigin = null;
+      save(sessionKey, session);
+      renderBrowse('home', { push: true });
+      break;
     case 'setup':
-      openSetup(kind, control);
+      openSetup(kind, control, modal.querySelector('#discovery-query')?.dataset.filter === 'voice' ? 'remote' : session.mode);
       break;
     case 'tutorial':
       openTutorial(kind, control);
@@ -921,6 +945,12 @@ document.addEventListener('click', (event) => {
   handleAction(control);
 });
 
+modal.addEventListener('input', (event) => {
+  if (event.target.id !== 'discovery-query') return;
+  const { filter } = event.target.dataset;
+  modal.querySelector('#discovery-results').innerHTML = discoveryResults(filter, event.target.value);
+});
+
 document.addEventListener('submit', (event) => {
   event.preventDefault();
   const data = new FormData(event.target);
@@ -1089,6 +1119,10 @@ window.addEventListener('hashchange', () => {
       return;
     }
     const target = browseTarget();
+    if (stage.hidden) {
+      renderBrowse(target, { quick: location.hash === '#quick-games' });
+      return;
+    }
     setLocation('#round');
     askToLeave(target, document.activeElement);
   } else {
@@ -1096,6 +1130,7 @@ window.addEventListener('hashchange', () => {
   }
 });
 
+renderDiscovery(document.getElementById('home-discovery'));
 applyPreferences();
 updateConnection();
 updateInstall();

@@ -594,6 +594,7 @@ export function roundView(session, { privateVisible = false, nightUnlocked = fal
           ${button('tutorial', 'جرّب الشرح', 'quiet', `data-kind="${round.kind}"`)}
           ${button('help', 'قواعد اللعبة', 'quiet')}
           ${button('settings', 'الإعدادات', 'quiet')}
+          ${['result', 'team-result'].includes(round.phase) ? '' : button('home-save-round', 'احفظ وارجع للرئيسية', 'quiet')}
           ${button(teams ? 'teams' : 'games', ['result', 'team-result'].includes(round.phase) ?
             (teams ? 'ألعاب الفرق' : 'الألعاب') : 'إنهاء الجولة', 'quiet round-exit')}
         </div>
