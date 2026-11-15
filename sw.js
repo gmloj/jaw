@@ -1,4 +1,4 @@
-const cacheName = 'jaw-opening-start-tap-v1';
+const cacheName = 'jaw-offline-network-first-v1';
 const cachePrefixes = ['jaw-', 'dawrak-'];
 const files = [
   '', 'style.css', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'welcome.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'team-views.js', 'engine.js', 'offline.js',
@@ -41,12 +41,29 @@ self.addEventListener('fetch', (event) => {
   const pageUrl = url.origin + url.pathname;
   const isHome = request.mode === 'navigate' && [siteRoot, localUrl('index.html')].includes(pageUrl);
   if (!isHome && !urls.has(request.url)) return;
+  const key = isHome ? siteRoot : request;
+  const cache = caches.open(cacheName);
+  const online = Promise.resolve().then(() => fetch(request, {
+    cache: 'no-cache',
+    signal: globalThis.AbortSignal?.timeout?.(4500),
+  })).catch(() => null);
+
+  if (!request.headers?.has('range')) {
+    event.waitUntil?.(online.then(async (response) => {
+      if (response?.status === 200 && !response.redirected) {
+        await (await cache).put(key, response.clone());
+      }
+    }).catch(() => {}));
+  }
+
   event.respondWith((async () => {
-    const cache = await caches.open(cacheName);
-    const cached = await cache.match(isHome ? siteRoot : request);
-    if (!cached) return fetch(request);
+    const response = await online;
+    if (response && response.status < 500) return response;
+
+    const cached = await (await cache).match(key);
+    if (!cached) return response || Response.error();
     if (isHome && cached.redirected) {
-      return new Response(cached.body, { status: cached.status, statusText: cached.statusText, headers: cached.headers });
+      return new Response(cached.body, { status: cached.status, headers: cached.headers });
     }
     return cached;
   })());
