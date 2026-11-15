@@ -1,7 +1,8 @@
+import { emptyHideout, hideoutIsValid, reduceHideout } from './hideout.js';
 import { auctionPrompts, tabooCards } from './team-prompts.js';
 
 const decks = { taboo: tabooCards, auction: auctionPrompts };
-export const teamKinds = Object.keys(decks);
+export const teamKinds = [...Object.keys(decks), 'hideout'];
 
 const durations = { taboo: 45_000, auction: 20_000 };
 const defaultNames = ['الفريق الأول', 'الفريق الثاني'];
@@ -66,17 +67,19 @@ function turnFields() {
 
 export function makeTeamGame(kind, { players, names, assignments, turns } = {}, rng = Math.random, deck = decks[kind]) {
   if (!teamKinds.includes(kind) || !validRoster(players)) return null;
+  const turnsPerTeam = Number.isInteger(turns) ? Math.max(1, Math.min(5, turns)) : 2;
+  const team = {
+    squads: makeSquads(players, names, assignments),
+    scores: [0, 0], turn: 0, turns: turnsPerTeam, total: turnsPerTeam * 2,
+    ...turnFields(),
+  };
+  if (kind === 'hideout') return { kind, phase: 'team-ready', team: { ...team, hideout: emptyHideout() } };
   const queue = shuffle([...playableDeck(kind, deck).values()], rng);
   if (!queue.length) return null;
-  const turnsPerTeam = Number.isInteger(turns) ? Math.max(1, Math.min(5, turns)) : 2;
   return {
     kind,
     phase: 'team-ready',
-    team: deal({
-      squads: makeSquads(players, names, assignments),
-      scores: [0, 0], turn: 0, turns: turnsPerTeam, total: turnsPerTeam * 2,
-      queue, used: [], ...turnFields(),
-    }),
+    team: deal({ ...team, queue, used: [] }),
   };
 }
 
@@ -122,6 +125,7 @@ function play(round, action, now) {
 export function reduceTeamGame(round, action, value, now = Date.now()) {
   if (!round?.team || !teamKinds.includes(round.kind) || !Number.isFinite(now)) return round;
   const { kind, phase, team } = round;
+  if (kind === 'hideout') return reduceHideout(round, action, value, now);
   if (phase === 'team-ready' && action === 'start') {
     if (kind === 'auction') return change(round, 'team-bid', { bidding: activeTeam(team) });
     return change(round, 'team-play', { endsAt: now + durations.taboo });
@@ -203,13 +207,15 @@ function validExplanation(kind, phase, team) {
 }
 
 export function teamRoundIsValid(round, deck = decks[round?.kind]) {
-  if (!round?.team || !teamKinds.includes(round.kind) || !phases.includes(round.phase)) return false;
+  if (!round?.team || !teamKinds.includes(round.kind)) return false;
   const { kind, phase, team } = round;
   const { turn, turns, total, pointCount, skipped, scores, squads } = team;
   if (!validSquads(squads) || !Array.isArray(scores) || scores.length !== 2 || !scores.every(isCount) ||
       !isCount(turns) || turns < 1 || turns > 5 || total !== turns * 2 || !isCount(turn) || turn >= total ||
       !isCount(pointCount) || !isCount(skipped)) return false;
   if (phase === 'team-result' && turn + 1 !== total) return false;
+  if (kind === 'hideout') return hideoutIsValid(round);
+  if (!phases.includes(phase)) return false;
   if (phase === 'team-bid' && kind !== 'auction') return false;
   if (kind !== 'taboo' && skipped !== 0) return false;
   if (phase === 'team-ready' && pointCount !== 0) return false;

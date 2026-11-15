@@ -569,6 +569,7 @@ textarea.field { margin-block-start: 8px; resize: vertical; min-height: 110px; }
 .browse-emblem .icon { font-size: 1.25rem; }
 .game-card[data-kind="taboo"] { --tile-glow: #e55d9c55; }
 .game-card[data-kind="auction"] { --tile-glow: #ffba6042; }
+.game-card[data-kind="hideout"] { --tile-glow: #a66bfa69; }
 
 .team-setup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .team-setup .field-label, .team-player-field .name-field { min-inline-size: 0; }
@@ -608,6 +609,34 @@ textarea.field { margin-block-start: 8px; resize: vertical; min-height: 110px; }
 .team-progress { display: block; inline-size: min(100%, 280px); margin-inline: auto; accent-color: #f5ac5f; }
 .team-bid-form { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .team-summary { font-size: 1.12rem; overflow-wrap: anywhere; }
+.hideout-form, .hideout-verdict {
+  display: grid;
+  gap: var(--space-2);
+  width: min(100%, 420px);
+  margin-inline: auto;
+  text-align: start;
+}
+.hideout-form .field { width: 100%; min-inline-size: 0; }
+.hideout-form .form-message:empty { display: none; }
+.hideout-location, .hideout-verdict, .hideout-roster { overflow-wrap: anywhere; }
+.hideout-location { font-weight: 700; }
+.hideout-verdict { text-align: center; padding-block: var(--space-2); }
+.hideout-roster {
+  display: grid;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: start;
+}
+.hideout-roster li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+  gap: var(--space-1) var(--space-2);
+  align-items: baseline;
+}
+.hideout-roster small { color: var(--muted); }
+
 
 @media (min-width: 640px) { .team-stage { gap: 16px; } }
 .team-prepare[open] { display: grid; gap: 8px; }

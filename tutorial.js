@@ -162,6 +162,20 @@ const lessons = {
     session.round = reduceTeamGame(session.round, 'finish');
     show(teamAction('next'), 'سلّم الدور للفريق الثاني بعد مراجعة النقاط.');
   },
+  hideout(session, show) {
+    show('#hideout-place-form', 'أعلن المكان العام للفريقين، ثم ابدأ وقت الاختباء.');
+    session.round = reduceTeamGame(session.round, 'hide-start', 'استراحة');
+    show('#hideout-spots-form', 'كل لاعب يرسل مخبأه لك بالخاص. سجّل المخابئ وثبّتها.');
+    session.round = reduceTeamGame(session.round, 'hide-lock', ['داخل صندوق الفحم', 'وراء الستارة']);
+    show(teamAction('hide-question'), 'للباحثين سؤالان إجابتهما نعم أو لا. احسب كل سؤال هنا.');
+    show('#hideout-guess-form', 'عندكم ثلاث محاولات. سجّل اسم اللاعب والمخبأ اللي خمّنوه.');
+    session.round = reduceTeamGame(session.round, 'hide-guess', { player: 0, text: 'صندوق الفحم' });
+    show(action('reveal'), 'شوف المخبأ الفعلي بسرية إذا احتجت تتأكد من التخمين.');
+    show(teamAction('hide-correct'), 'إذا كان نفس المخبأ سجّلها صح. إذا غلط تروح عليهم المحاولة.');
+    session.round = reduceTeamGame(session.round, 'hide-verdict', true);
+    session.round = reduceTeamGame(session.round, 'finish');
+    show(teamAction('next'), 'بعد كشف المخابئ وحساب النقاط، الفريقان يبدّلون الأدوار.');
+  },
   auction(session, show) {
     show(teamAction('start'), 'افتح المزاد للفريقين.');
     session.round = reduceTeamGame(session.round, 'start');

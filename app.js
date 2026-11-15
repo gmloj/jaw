@@ -218,7 +218,7 @@ function openSetup(kind, opener) {
   draft = {
     kind,
     count: Math.max(game.min, session.players.length),
-    names: kind === 'choice' ? session.players.map((player) => player.name) : [],
+    names: ['choice', 'hideout'].includes(kind) ? session.players.map((player) => player.name) : [],
     mode: session.mode,
     difficulty: settings?.difficulty ?? 'mixed',
     duration: settings?.duration ?? (kind === 'choice' ? 0 : kind === 'mafia' ? 90 : 60),
@@ -450,7 +450,19 @@ function updateTeamClock() {
   const now = Date.now();
   if (now >= deadline) {
     clearClockInterval();
-    playTeamAction('tick', undefined, now);
+    if (session.round.phase === 'hide-spots') {
+      clock.textContent = number(0);
+      clock.dataset.urgent = 'false';
+      const hint = stage.querySelector('#hideout-time-hint');
+      hint.textContent = 'انتهى وقت الاختباء. كمّل تسجيل المخابئ اللي وصلتك.';
+      if (!clockEnded) {
+        clockEnded = true;
+        motion.feedback('timeout');
+        announce(hint.textContent);
+      }
+    } else {
+      playTeamAction('tick', undefined, now);
+    }
     return;
   }
   clockInterval ??= window.setInterval(updateClock, 200);
@@ -467,20 +479,28 @@ function playTeamAction(action, value, now = Date.now()) {
   const before = session.round;
   if (!teamKinds.includes(before?.kind)) return;
   const next = reduceTeamGame(before, action, value, now);
-  if (next === before) return;
+  if (next === before) return false;
   session.round = next;
+  if (action === 'hide-verdict' || (action === 'tick' && before.kind === 'hideout')) privateVisible = false;
   if (next.phase === before.phase) {
     updateRound({ focus: false, animate: false });
     const focus = { correct: 'correct', skip: 'skip', pause: 'resume', resume: 'pause' }[action];
     if (focus) stage.querySelector(`[data-team-action="${focus}"]`)?.focus({ preventScroll: true });
     if (action === 'bid') stage.querySelector('#team-bid, [data-team-action="challenge"]')?.focus({ preventScroll: true });
+    if (action === 'hide-guess') stage.querySelector('[data-team-action="hide-correct"]')?.focus({ preventScroll: true });
+    if (action === 'hide-verdict') {
+      stage.querySelector('#hideout-guess-form select')?.focus({ preventScroll: true });
+      motion.feedback(value ? 'success' : 'select');
+      announce(value ? 'لقطناه!' : 'المخبأ غلط');
+    }
+    if (action === 'hide-question') stage.querySelector('[data-team-action="hide-question"]:enabled')?.focus({ preventScroll: true });
     if (action === 'correct') motion.feedback('success');
     if (action === 'bid') {
       motion.feedback('select');
       visuals.emit('select', stage.querySelector('.team-prompt'));
       announce('تم تسجيل المزايدة.');
     }
-    return;
+    return true;
   }
   if (action === 'tick') motion.feedback('timeout');
   if (next.phase === 'team-result') {
@@ -489,8 +509,9 @@ function playTeamAction(action, value, now = Date.now()) {
   } else if (action === 'tick') {
     changeRound('timeout');
   } else {
-    changeRound(action === 'start' || action === 'challenge' ? 'reveal' : 'round');
+    changeRound(['start', 'challenge', 'hide-start', 'hide-lock'].includes(action) ? 'reveal' : 'round');
   }
+  return true;
 }
 
 async function copyTeamCard() {
@@ -738,9 +759,15 @@ function handleAction(control) {
         announce('تم اختيار ' + selected.querySelector('small').textContent);
       }
       break;
-    case 'team-action':
-      playTeamAction(control.dataset.teamAction);
+    case 'team-action': {
+      const teamAction = control.dataset.teamAction;
+      if (teamAction === 'hide-correct' || teamAction === 'hide-wrong') {
+        playTeamAction('hide-verdict', teamAction === 'hide-correct');
+      } else {
+        playTeamAction(teamAction);
+      }
       break;
+    }
     case 'team-copy':
       void copyTeamCard();
       break;
@@ -907,6 +934,23 @@ document.addEventListener('submit', (event) => {
     case 'team-bid-form':
       playTeamAction('bid', Number(data.get('bid')));
       break;
+    case 'hideout-place-form': {
+      const place = String(data.get('place') ?? '').trim() || data.get('preset');
+      if (!playTeamAction('hide-start', place)) showFormError('#hideout-error', 'اختر مكان أو اكتب مكان من عندك.');
+      break;
+    }
+    case 'hideout-spots-form': {
+      const spots = session.round.team.hideout.spots.map((_, index) => data.get('spot-' + index));
+      if (!playTeamAction('hide-lock', spots)) showFormError('#hideout-error', 'سجّل مخبأ لكل لاعب قبل ما تبدأ البحث.');
+      break;
+    }
+    case 'hideout-guess-form': {
+      const player = data.get('player');
+      if (player === null || player === '' || !playTeamAction('hide-guess', { player: Number(player), text: data.get('guess') })) {
+        showFormError('#hideout-error', 'اختر لاعب واكتب تخمينه قبل انتهاء الوقت.');
+      }
+      break;
+    }
     case 'evidence-form': {
       const suspect = data.get('suspect');
       if ((suspect !== null && resolveEvidence(session, Number(suspect))) || resolveEvidence(session, null)) changeRound();
@@ -975,6 +1019,15 @@ modal.addEventListener('keydown', (event) => {
   event.preventDefault();
   const next = modal.querySelector(`[data-player="${Number(event.target.dataset.player) + 1}"]`);
   (next || modal.querySelector('#setup-form [type="submit"]'))?.focus();
+});
+
+stage.addEventListener('input', (event) => {
+  const { hideoutSpot } = event.target.dataset;
+  if (hideoutSpot === undefined || session.round?.kind !== 'hideout') return;
+  const round = reduceTeamGame(session.round, 'hide-draft', { player: Number(hideoutSpot), text: event.target.value });
+  if (round === session.round) return;
+  session.round = round;
+  save(sessionKey, session);
 });
 
 stage.addEventListener('keydown', (event) => {

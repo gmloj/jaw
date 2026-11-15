@@ -605,7 +605,7 @@ export function roundView(session, { privateVisible = false, nightUnlocked = fal
 
 export function roundPanel(session, { privateVisible = false, nightUnlocked = false } = {}) {
   const { round } = session;
-  if (teamKinds.includes(round.kind)) return teamRoundPanel(round);
+  if (teamKinds.includes(round.kind)) return teamRoundPanel(round, { privateVisible });
   if (round.phase === 'night') return renderNight(session, { privateVisible, nightUnlocked });
   return stageViews[round.phase](session, privateVisible);
 }
