@@ -29,6 +29,7 @@ export function createMotion(document, preferences) {
     let seenCards = new WeakSet();
     let audio;
     let level = motionLevel(preferences.motion, system.matches);
+    let choiceSequence;
     let lastFeedback = 0;
     let feedbackPriority = 0;
     const observedCards = new WeakSet();
@@ -49,12 +50,37 @@ export function createMotion(document, preferences) {
         animation.addEventListener('cancel', forget, { once: true });
     }
     function clear(container) {
+        if (choiceSequence && (!choiceSequence.surface.isConnected || !container || container.contains(choiceSequence.surface))) {
+            choiceSequence.timeline.revert();
+            choiceSequence = undefined;
+        }
         for (const [element, animation] of active) {
             if (!element.isConnected || !container || container.contains(element)) {
                 animation.cancel();
                 active.delete(element);
             }
         }
+    }
+    function prepareChoice() {
+        if (level !== 'reduced' && !win.gsap) {
+            void import('../vendor/gsap-3.15.1.min.js').catch(() => {});
+        }
+    }
+    function playChoiceRating(surface) {
+        if (level === 'reduced') return;
+        const answer = surface.querySelector('.choice-answer');
+        const rating = surface.querySelector('.choice-rating');
+        if (!win.gsap) {
+            play(rating, 'rise', 'card');
+            return;
+        }
+        const timeline = win.gsap.timeline({
+            defaults: { ease: 'power3.out' },
+            onComplete: () => { choiceSequence = undefined; },
+        });
+        choiceSequence = { surface, timeline };
+        timeline.from(answer, { scale: .983, duration: .16, clearProps: 'transform' })
+            .from(rating, { y: 8, opacity: .8, duration: .25, clearProps: 'transform,opacity' }, .05);
     }
     function apply(next) {
         preferences = next;
@@ -196,7 +222,7 @@ export function createMotion(document, preferences) {
     }, { signal });
     registerGestures(document, signal);
     apply(preferences);
-    return { apply, play, clear, feedback, round, observeCards, modalExit, unlockAudio,
+    return { apply, play, clear, feedback, round, prepareChoice, playChoiceRating, observeCards, modalExit, unlockAudio,
         get reduced() { return level === 'reduced'; },
         get systemReduced() { return system.matches; },
         destroy() {

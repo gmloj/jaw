@@ -1,8 +1,8 @@
-const cacheName = 'jaw-choice-challenge-v1';
+const cacheName = 'jaw-choice-challenge-v2';
 const cachePrefixes = ['jaw-', 'dawrak-'];
 const files = [
   '', 'style.css', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'team-views.js', 'engine.js', 'offline.js',
-  'manifest.webmanifest', 'assets/plex-arabic-400.woff2', 'assets/plex-arabic-700.woff2',
+  'manifest.webmanifest', 'vendor/gsap-3.15.1.min.js', 'assets/plex-arabic-400.woff2', 'assets/plex-arabic-700.woff2',
   'assets/plex-latin-400.woff2', 'assets/plex-latin-700.woff2', 'assets/jaw-wordmark.webp', 'assets/isco-jackaroo.webp',
   'assets/jaw-icon-v2-192.png', 'assets/jaw-icon-v2-512.png', 'assets/jaw-icon-v2-180.png',
   'assets/jaw-icon-v2-maskable.png', 'assets/jaw-campfire.webp',

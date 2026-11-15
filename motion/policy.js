@@ -19,6 +19,7 @@ export function gameProfile(value) {
 }
 const actionFeedback = {
     'choice-pick': 'select', 'know-answer': 'select', 'know-guess': 'select', 'begin-vote': 'vote',
+    'choice-rate-start': 'vote', 'choice-rate': 'vote',
     'vote-form': 'vote', 'reveal': 'reveal', 'anonymous-open': 'reveal', 'evidence-clue': 'reveal',
 };
 export function feedbackForAction(action) {

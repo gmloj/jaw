@@ -476,14 +476,17 @@ function renderChoice(session) {
     ${questionCards ? `<div class="choice-pairs" role="group" aria-label="الخياران">
       ${question.options.map((answer, index) =>
         `<button class="choice-pair" type="button" data-action="choice-pick" data-option="${index}"
-          aria-pressed="${selected === index}" aria-disabled="${picked}">
-          <small>${choiceLabels[index]}</small><strong>${escape(answer)}</strong>
+          aria-pressed="${selected === index}" aria-disabled="${picked}" ${picked && selected !== index ? 'tabindex="-1"' : ''}>
+          <span class="choice-pair-label"><small>${choiceLabels[index]}</small>${selected === index
+            ? '<svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></svg>' : ''}</span>
+          <strong>${escape(answer)}</strong>
         </button>`).join('')}
-    </div>` : picked ? `<p class="choice-answer">الاختيار <strong>${escape(question.options[selected])}</strong></p>` : ''}
+    </div>` : picked ? `<div class="choice-answer" data-option="${selected}"><small>${choiceLabels[selected]}</small>
+      <strong>${escape(question.options[selected])}</strong></div>` : ''}
     ${phase === 'picking' ? clockView(session) : ''}
     ${isRating ? `<section class="choice-rating" aria-label="تقييم التبرير">
+      <h2 id="choice-rating-title" tabindex="-1">قيّم التبرير يا ${name(session, choiceVoter(round))}</h2>
       ${step('تقييم الشلّة', votes.length + 1, order.length - 1)}
-      <p>تقييم ${name(session, choiceVoter(round))} لتبرير الاختيار</p>
       <div class="actions choice-ratings">${['ما أقنعني', 'مقنع', 'صريح وقوي'].map((label, points) =>
         button('choice-rate', label + ' · ' + number(points), 'outline', `data-voter="${choiceVoter(round)}" data-points="${points}"`)).join('')}</div>
     </section>` : ''}
@@ -496,10 +499,11 @@ function renderChoice(session) {
         </label>`}
         <div class="actions">${submit(finalTurn ? 'اعرض النتائج' : 'السؤال التالي')}</div>
       </form>` : ''}
+    ${picked && questionCards ? '<p class="choice-explain-hint">قل للشلّة ليش اخترت كذا.</p>' : ''}
     ${questionCards ? `<div class="actions choice-controls">
-      ${picked ? button('choice-rate-start', 'ابدأ التصويت') : ''}
+      ${picked ? button('choice-rate-start', 'ابدأ التقييم') : ''}
       ${button('choice-skip', 'تخطي · ' + number(skips) + ' باقي', 'outline', skips ? '' : 'disabled')}
-    </div>${picked ? '<p>قل للشلّة ليش اخترت كذا.</p>' : ''}` : ''}
+    </div>` : ''}
     <details class="rules choice-scores"><summary>لوحة النقاط</summary>
       ${scoreList(session, order.map((player) => [player, number(scores[player])]))}
     </details>

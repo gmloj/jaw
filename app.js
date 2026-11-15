@@ -25,6 +25,7 @@ const home = document.getElementById('home');
 const siteTitle = document.title;
 const stage = document.querySelector('#play');
 const modal = document.querySelector('#modal');
+const choiceRatingTapWindow = 250;
 let session = restoreSession(read(sessionKey));
 const savedPreferences = read(settingsKey) ?? read('dawrak-preferences');
 let preferences = motionPreferences(savedPreferences);
@@ -52,6 +53,7 @@ let leaveTo = 'games';
 let clockEnded = false;
 let clockInterval;
 let storageWarning = false;
+let lastChoiceRating = -Infinity;
 
 function read(key) {
   try {
@@ -314,6 +316,7 @@ function endRound(target) {
 
 function renderRound({ focus = true, animate = true, effect = 'round' } = {}) {
   const entering = stage.hidden;
+  const previousPhase = stage.firstElementChild?.dataset.phase;
   if (entering) {
     for (const page of pages) {
       if (!page.hidden) motion.clear(page);
@@ -327,12 +330,20 @@ function renderRound({ focus = true, animate = true, effect = 'round' } = {}) {
   stage.innerHTML = roundView(session, { privateVisible, nightUnlocked });
   const surface = stage.firstElementChild;
   const { kind, phase } = session.round;
+  const ratingHeading = kind === 'choice' && phase === 'choice-rating'
+    ? surface.querySelector('#choice-rating-title') : null;
+  if (kind === 'choice' && phase === 'picking') motion.prepareChoice();
   const game = games[kind];
   surface.dataset.visualProfile = game.visualProfile ?? 'jaw';
   visuals.atmosphere(game.visualProfile, phase);
   visuals.skipCountdown();
   if (animate) {
-    motion.round(surface, game.motionProfile, entering ? 'page' : 'card', effect);
+    if (ratingHeading) {
+      if (previousPhase === 'choice-explain') motion.playChoiceRating(surface);
+      motion.feedback('vote');
+    } else {
+      motion.round(surface, game.motionProfile, entering ? 'page' : 'card', effect);
+    }
     if (entering || effect === 'start') visuals.startRound(stage);
     if (['reveal', 'select', 'vote', 'win', 'loss', 'timeout'].includes(effect) || entering || effect === 'start') {
       visuals.emit(entering || effect === 'start' ? 'start' : effect, surface.querySelector('.stage-panel'));
@@ -340,8 +351,9 @@ function renderRound({ focus = true, animate = true, effect = 'round' } = {}) {
   }
   updateClock();
   if (focus) {
-    stage.querySelector('#stage-title').focus({ preventScroll: true });
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    (ratingHeading ?? stage.querySelector('#stage-title')).focus({ preventScroll: true });
+    if (ratingHeading) ratingHeading.closest('.choice-rating').scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    else window.scrollTo({ top: 0, behavior: 'instant' });
   }
 }
 
@@ -771,11 +783,21 @@ function handleAction(control) {
       if (nextSocialPrompt(session)) changeRound();
       break;
     case 'choice-rate-start':
-      if (beginChoiceRating(session)) changeRound();
+      if (beginChoiceRating(session)) {
+        lastChoiceRating = -Infinity;
+        changeRound();
+      }
       break;
-    case 'choice-rate':
-      if (rateChoice(session, Number(control.dataset.voter), Number(control.dataset.points))) changeRound('vote');
+    case 'choice-rate': {
+      const now = performance.now();
+      // Rendering the next voter immediately puts fresh buttons under a rapid second tap.
+      if (now - lastChoiceRating < choiceRatingTapWindow) break;
+      if (rateChoice(session, Number(control.dataset.voter), Number(control.dataset.points))) {
+        lastChoiceRating = now;
+        changeRound('vote');
+      }
       break;
+    }
     case 'choice-skip':
       if (skipChoice(session)) changeRound();
       break;
