@@ -1,4 +1,4 @@
-const cacheName = 'jaw-home-discovery-v1';
+const cacheName = 'jaw-installed-update-v1';
 const cachePrefixes = ['jaw-', 'dawrak-'];
 const files = [
   '', 'style.css', 'home-discovery.css', 'home-discovery.js', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'welcome.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'hideout.js', 'team-views.js', 'engine.js', 'offline.js',

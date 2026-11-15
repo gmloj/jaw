@@ -118,6 +118,7 @@ modal.addEventListener('close', () => {
   }
   const opener = modalOpener;
   if (opener?.isConnected && !opener.closest('[hidden]') && document.activeElement === document.body) opener.focus();
+  refreshAppWhenIdle();
 });
 
 tutorialDialog.addEventListener('close', () => {
@@ -190,9 +191,10 @@ function renderSettings(opener) {
     ${preferenceField('sound', 'أصوات اللعبة', 'إشارات قصيرة للضغط وكشف الأدوار والنتيجة')}
     ${'vibrate' in navigator ? preferenceField('vibration', 'الاهتزاز', 'للانتقال بين الأدوار ونهاية الوقت') : ''}
     <div class="actions">
-      ${hasUpdate() ? button('update-app', 'حدّث جوّ') : ''}
+      ${hasUpdate() || installed() ? button('update-app', 'حدّث جوّ') : ''}
       ${installed() ? '' : button('install', 'ثبّت جوّ', 'outline')}
     </div>
+    <p id="app-update-status" class="form-message" role="status" hidden></p>
     <p class="muted small">عود الافتتاحية من أداء <a href="https://freesound.org/people/xserra/sounds/182730/" target="_blank" rel="noopener">أوركسترا تطوان أسمير، تسجيل xserra</a>. مقتطف محرّر بموجب <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener"><bdi>CC BY 4.0</bdi></a>.</p>
   `, opener, 'settings');
 }
@@ -289,6 +291,7 @@ function renderBrowse(target, { initial = false, push = false, quick = false } =
     else link.removeAttribute('aria-current');
   }
   motion.observeCards(page);
+  refreshAppWhenIdle();
   if (!initial && entering) motion.play(page, 'fade', 'page');
 
   const origin = leavingRound ? roundOrigin : null;
@@ -738,6 +741,12 @@ function handleAction(control) {
       void install(control);
       break;
     case 'update-app':
+      if (!navigator.onLine) {
+        const status = modal.querySelector('#app-update-status');
+        status.hidden = false;
+        status.textContent = 'شبّك على الإنترنت عشان تحدّث جوّ.';
+        break;
+      }
       save(sessionKey, session);
       activateUpdate();
       break;
@@ -1134,7 +1143,8 @@ renderDiscovery(document.getElementById('home-discovery'));
 applyPreferences();
 updateConnection();
 updateInstall();
-enableOffline({
+const refreshAppWhenIdle = enableOffline({
+  canReload: () => !session.round && !document.querySelector('dialog[open]'),
   onInstallChange: updateInstall,
   onUpdate: () => announce('يتوفّر تحديث لجوّ في الإعدادات.'),
 });
