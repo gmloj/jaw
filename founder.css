@@ -30,7 +30,7 @@ body[data-nav="founder"] .mobile-nav {
   --isco-muted: #d4c6cf;
   --isco-ink: #faf5f0;
   --isco-rule: #ad837444;
-  --isco-flow-inset: clamp(16px, 4vw, 56px);
+  --isco-flow-inset: clamp(12px, 3vw, 32px);
   --isco-ambient-time: calc(var(--jaw-drift-time) / 3);
   --isco-grid: linear-gradient(#af8a6514 1px, transparent 1px),
     linear-gradient(90deg, #af8a6514 1px, transparent 1px);
@@ -82,7 +82,7 @@ body[data-nav="founder"] .mobile-nav {
 .founder-lead { max-inline-size: 43ch; color: var(--isco-muted); line-height: 1.8; font-size: clamp(.98rem, 1.7vw, 1.19rem); }
 .founder-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .founder-intro .founder-actions { margin-block-start: clamp(16px, 3vw, 29px); }
-.founder-page .button { min-block-size: 44px; }
+.founder-page .button { min-block-size: var(--touch); }
 .isco-profile {
   --isco-intro-delay: 265ms;
   display: grid;
@@ -286,8 +286,7 @@ body[data-nav="founder"] .mobile-nav {
   align-items: flex-start;
   gap: clamp(10px, 3vw, 24px);
   min-inline-size: 0;
-  padding-block: 16px;
-  border-block-start: 1px solid var(--isco-rule);
+  padding-block: var(--space-3);
 }
 .founder-project-item h4 { margin: 3px 0 6px; font-size: clamp(1.22rem, 2.8vw, 1.65rem); line-height: 1.45; }
 .founder-project-item p:not(.founder-case-type) { color: var(--isco-muted); line-height: 1.7; }

@@ -16,12 +16,14 @@
   <link rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./visual.css">
   <link rel="stylesheet" href="./founder.css">
+  <link rel="modulepreload" href="./app.js">
   <script type="module" src="./app.js"></script>
 </head>
 <body data-nav="home">
   <svg xmlns="http://www.w3.org/2000/svg" class="icon-definitions" aria-hidden="true" width="0" height="0">
     <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10H3zM9 20v-6h6v6"/></symbol>
     <symbol id="icon-game" viewBox="0 0 24 24"><path d="M7.1 7h9.8a4 4 0 0 1 3.94 3.3l1.03 5.8a2 2 0 0 1-3.38 1.78L15 15H9l-3.49 2.88a2 2 0 0 1-3.38-1.78l1.03-5.8A4 4 0 0 1 7.1 7ZM7.5 9v4m-2-2h4m6 .3h.01m3-.9h.01"/></symbol>
+    <symbol id="icon-more" viewBox="0 0 24 24"><path d="M5 12h.01m6.99 0h.01m6.99 0h.01" stroke-width="3"/></symbol>
     <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></symbol>
     <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M10 3h4l.6 2.5 1.6.9 2.4-.8 2 3.5-1.9 1.6v1.8l1.9 1.7-2 3.5-2.4-.9-1.6.9-.6 2.3h-4l-.5-2.3-1.6-.9-2.5.9-2-3.5 2-1.7v-1.8l-2-1.6 2-3.5 2.5.8 1.6-.9z"/><circle cx="12" cy="11.7" r="2.7"/></symbol>
     <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></symbol>
@@ -34,10 +36,11 @@
     <symbol id="icon-flame" viewBox="0 0 24 24"><path d="M13 2c0 4-4 5-4 8 0 1 0 2 1 3-3 0-4-2-4-3a7.5 7.5 0 1 0 13.5 5c0-4-2-6.6-4-8 .4 2-.5 3-1 3C15 6 14 4 13 2Z"/><path d="M10 18c0-1.5 1.1-2.2 2-3 1 1 2 1.7 2 3a2 2 0 1 1-4 0Z"/></symbol>
   </svg>
 
+  <div id="app-content">
   <a class="skip-link" href="#main" data-action="focus-main">انتقل للمحتوى</a>
   <header class="header shell">
     <div class="header-inner">
-      <a class="brand jaw-intro-logo" href="#home" data-action="home" aria-label="جوّ، الرئيسية">
+      <a class="brand" href="#home" data-action="home" aria-label="جوّ، الرئيسية">
         <img src="./assets/jaw-wordmark.webp" width="318" height="219" alt="">
         <span class="brand-by" lang="en" dir="ltr">BY ISCO</span>
       </a>
@@ -48,9 +51,9 @@
         <button type="button" data-action="help"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg> كيفية اللعب</button>
       </nav>
       <div class="header-tools">
-        <button class="button button-icon button-outline mobile-help" type="button" data-action="help" aria-label="كيف نلعب؟" title="كيف نلعب؟"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg></button>
-        <button id="install-top" class="button button-icon button-outline" type="button" data-action="install" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
-        <button class="button button-icon button-outline" type="button" data-action="settings" aria-label="الإعدادات" title="الإعدادات"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg></button>
+        <button class="button button-icon button-quiet mobile-help" type="button" data-action="help" aria-label="كيف نلعب؟" title="كيف نلعب؟"><svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg></button>
+        <button id="install-top" class="button button-icon button-quiet" type="button" data-action="install" aria-label="تثبيت التطبيق" title="تثبيت التطبيق"><svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg></button>
+        <button class="button button-icon button-quiet header-settings" type="button" data-action="settings" aria-label="الإعدادات" title="الإعدادات"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg></button>
       </div>
     </div>
     <div class="connection" id="connection" role="status" hidden></div>
@@ -58,31 +61,9 @@
 
   <main class="shell" id="main" tabindex="-1">
     <div id="home" data-browse>
-      <section class="hero" aria-labelledby="hero-title">
-        <picture class="hero-art">
-          <source media="(max-width: 639px)" srcset="./assets/jaw-campfire.webp">
-          <source media="(max-width: 1100px)" srcset="./assets/jaw-lounge-small.webp">
-          <img src="./assets/jaw-lounge.webp" width="1720" height="688" alt="" fetchpriority="high">
-        </picture>
-        <video class="jaw-campfire" data-src="./assets/jaw-campfire-loop.mp4" muted loop playsinline preload="none" aria-hidden="true" disablepictureinpicture></video>
-        <div class="hero-copy">
-          <div class="welcome-brand jaw-intro-logo">
-            <img src="./assets/jaw-wordmark.webp" width="318" height="219" alt="جوّ">
-            <span class="brand-by" lang="en" dir="ltr">BY ISCO</span>
-          </div>
-          <h1 id="hero-title">جمعتكم لها <strong>جوّ ثاني.</strong></h1>
-          <p class="hero-desc">ألعاب تفاعلية للجمعات والأصدقاء. افتحوا رومكم، وخلوها تبدأ.</p>
-          <div class="actions hero-actions">
-            <button class="button button-primary start-now" type="button" data-action="setup" data-kind="outsider"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg> ابدأ اللعب الآن</button>
-            <a class="button button-outline explore-games" href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-game"/></svg> استكشف الألعاب</a>
-            <a class="button button-primary mobile-start" href="#games" data-action="games"><svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg> ابدأ الآن</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="catalogue" aria-labelledby="featured-title">
+      <section class="catalogue" aria-labelledby="home-title">
         <div class="section-header browse-section-header">
-          <h2 id="featured-title"><svg class="icon" aria-hidden="true"><use href="#icon-flame"/></svg> أبرز الألعاب</h2>
+          <h1 id="home-title" tabindex="-1">أبرز الألعاب</h1>
           <a class="button button-outline button-compact" href="#games" data-action="games">كل الألعاب</a>
         </div>
         <div class="game-grid" id="featured-games"><!-- featured-games:start -->
@@ -673,18 +654,69 @@
     <button type="button" data-action="settings"><svg class="icon" aria-hidden="true"><use href="#icon-settings"/></svg><span>الإعدادات</span></button>
   </nav>
 
+  </div>
+
+  <dialog class="welcome" id="welcome" aria-labelledby="welcome-title" closedby="none">
+    <div class="welcome-frame">
+      <div class="welcome-scene" aria-hidden="true">
+        <img src="./assets/jaw-campfire.webp" width="820" height="1230" alt="">
+        <video class="jaw-campfire" data-src="./assets/jaw-campfire-loop.mp4" muted playsinline preload="none" disablepictureinpicture></video>
+      </div>
+      <div class="welcome-light" aria-hidden="true"></div>
+      <div class="welcome-embers" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="welcome-copy">
+        <div class="welcome-logo">
+          <img class="welcome-logo-still" src="./assets/jaw-wordmark.webp" width="318" height="219" alt="جوّ">
+          <svg class="welcome-logo-brush" viewBox="0 0 318 219" aria-hidden="true">
+            <defs>
+              <mask id="welcome-ink" x="0" y="0" width="318" height="219" maskUnits="userSpaceOnUse">
+                <g fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round">
+                  <path class="welcome-stroke" pathLength="1" stroke-width="34" d="M180 87C199 59 226 65 253 84S289 106 303 114Q278 119 255 125C214 135 165 139 131 141"/>
+                  <path class="welcome-stroke" pathLength="1" stroke-width="39" d="M132 138C139 108 125 99 106 104S74 125 78 138C85 149 112 143 128 141C119 165 87 182 63 187S10 195 23 158"/>
+                  <path class="welcome-stroke" pathLength="1" stroke-width="43" d="M224 163L224 191"/>
+                  <path class="welcome-stroke" pathLength="1" stroke-width="16" d="M93 86Q104 71 111 73Q110 88 130 72Q129 90 152 70"/>
+                  <path class="welcome-stroke" pathLength="1" stroke-width="16" d="M26 46L59 55L66 18L93 43L112 17L116 56Q79 61 47 81Z"/>
+                </g>
+              </mask>
+            </defs>
+            <image width="318" height="219" href="./assets/jaw-wordmark.webp" mask="url(#welcome-ink)"/>
+          </svg>
+        </div>
+        <p class="welcome-credit" lang="en" dir="ltr">BY ISCO</p>
+        <h1 id="welcome-title" tabindex="-1" autofocus>جمعتكم لها <strong>جوّ ثاني.</strong></h1>
+      </div>
+      <div class="welcome-action">
+        <button class="button button-primary welcome-start" type="button" disabled>
+          <svg class="icon" aria-hidden="true"><use href="#icon-play"/></svg>
+          ابدأ اللعب
+        </button>
+      </div>
+      <div class="welcome-tools" hidden>
+        <button class="welcome-tool welcome-sound" type="button" aria-label="صوت العود" aria-pressed="false" title="تشغيل العود">
+          <span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4"/>
+            <path class="welcome-sound-muted" d="m17 10 4 4m0-4-4 4"/>
+            <path class="welcome-sound-playing" d="M17 9a4 4 0 0 1 0 6m2.7-8a7 7 0 0 1 0 10"/>
+          </svg></span>
+        </button>
+        <button class="welcome-tool welcome-skip" type="button"><span>تخطّي</span></button>
+      </div>
+      <audio data-src="./assets/jaw-opening-oud.mp3" preload="auto" aria-hidden="true"></audio>
+    </div>
+  </dialog>
+
   <dialog id="modal" class="modal" aria-labelledby="dialog-heading"></dialog>
   <dialog class="modal tutorial-dialog" id="tutorial" aria-labelledby="tutorial-title">
     <header class="modal-header">
-      <div><p class="tutorial-label">جولة تدريبية</p><h2 id="tutorial-title"></h2></div>
+      <h2 id="tutorial-title"></h2>
       <button class="icon-button" type="button" data-tutorial-command="close" aria-label="إغلاق الشرح">×</button>
     </header>
     <div class="tutorial-preview" aria-label="معاينة الجولة"></div>
     <footer class="tutorial-footer">
       <div role="status" aria-atomic="true"><span class="tutorial-progress"></span><p class="tutorial-hint"></p></div>
       <div class="tutorial-tools">
-        <button class="button button-outline" type="button" data-tutorial-command="close">تخطّ الشرح</button>
-        <button class="button button-outline" type="button" data-tutorial-command="previous">السابق</button>
+        <button class="button button-quiet" type="button" data-tutorial-command="close">تخطّ الشرح</button>
+        <button class="button button-quiet" type="button" data-tutorial-command="previous">السابق</button>
         <button class="button button-primary" type="button" data-tutorial-command="next">التالي</button>
       </div>
     </footer>

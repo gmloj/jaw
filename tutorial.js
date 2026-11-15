@@ -196,7 +196,7 @@ export function tutorialSteps(kind) {
   return steps;
 }
 
-export function createTutorial(dialog, { motion, seen, remember }) {
+export function createTutorial(dialog, { motion }) {
   let steps = [];
   let index = 0;
   const panel = dialog.querySelector('.tutorial-preview');
@@ -272,16 +272,16 @@ export function createTutorial(dialog, { motion, seen, remember }) {
   });
 
   return {
-    open(game, automatic = false) {
-      if (dialog.open || (automatic && seen(game))) return;
+    open(game, beforeOpen) {
+      if (dialog.open) return;
       steps = tutorialSteps(game);
       if (!steps.length) return;
       index = 0;
       dialog.querySelector('#tutorial-title').textContent = 'شرح ' + games[game].title;
+      beforeOpen();
       dialog.showModal();
       render();
       next.focus({ preventScroll: true });
-      remember(game);
     },
   };
 }

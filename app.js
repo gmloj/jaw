@@ -16,12 +16,12 @@ import {
 } from './engine.js';
 import { button, defaultPlayerName, gameRules, nameFields, number, roundView, setupView } from './views.js';
 import { activateUpdate, enableOffline, hasUpdate, installed, requestInstall } from './offline.js';
+import { mountWelcome } from './welcome.js';
 
 const sessionKey = 'aljumaa-session-v1';
 const settingsKey = 'jaw-preferences';
-const tutorialKey = 'jaw-tutorials-v1';
 const pages = [...document.querySelectorAll('[data-browse]')];
-const home = document.getElementById('home');
+const welcome = document.getElementById('welcome');
 const siteTitle = document.title;
 const stage = document.querySelector('#play');
 const modal = document.querySelector('#modal');
@@ -32,18 +32,14 @@ let preferences = motionPreferences(savedPreferences);
 let quality = visualQuality(savedPreferences?.quality);
 const visuals = createVisuals(document);
 const motion = createMotion(document, preferences);
-const savedTutorials = read(tutorialKey);
-const seenTutorials = new Set(Array.isArray(savedTutorials) ? savedTutorials : []);
-const tutorial = createTutorial(document.querySelector('#tutorial'), {
-  motion,
-  seen: (kind) => seenTutorials.has(kind),
-  remember(kind) {
-    visuals.skipCountdown();
-    if (seenTutorials.has(kind)) return;
-    seenTutorials.add(kind);
-    save(tutorialKey, [...seenTutorials]);
-  },
+const opening = mountWelcome(welcome, {
+  content: document.getElementById('app-content'),
+  onEnter: () => enterStartingPage(),
+  syncCampfire: visuals.syncCampfire,
 });
+const tutorialDialog = document.querySelector('#tutorial');
+const tutorial = createTutorial(tutorialDialog, { motion });
+let setupReturn;
 let roundOrigin = null;
 let draft;
 let privateVisible = false;
@@ -85,8 +81,9 @@ function updateConnection() {
     'الإنترنت مفصول. تقدر تكمل الجولة على جهازك.';
 }
 
-function openModal(title, body, opener = document.activeElement) {
+function openModal(title, body, opener = document.activeElement, layout = 'dialog') {
   if (!modal.open) modalOpener = opener;
+  modal.dataset.layout = layout;
   modal.innerHTML = `
     <div class="modal-header">
       <h2 id="dialog-heading" tabindex="-1">${title}</h2>
@@ -95,7 +92,7 @@ function openModal(title, body, opener = document.activeElement) {
     <div class="modal-body">${body}</div>
   `;
   if (!modal.open) modal.showModal();
-  modal.scrollTop = 0;
+  modal.querySelector('.modal-body').scrollTop = 0;
   modal.querySelector('#dialog-heading').focus({ preventScroll: true });
   motion.play(modal, 'rise', 'modal');
 }
@@ -112,7 +109,8 @@ modal.addEventListener('cancel', (event) => {
 });
 
 modal.addEventListener('close', () => {
-  if (!modal.open && modal.dataset.visualProfile) {
+  if (modal.open || setupReturn) return;
+  if (modal.dataset.visualProfile) {
     delete modal.dataset.visualProfile;
     const round = session.round;
     visuals.atmosphere(round && games[round.kind].visualProfile, round?.phase);
@@ -120,6 +118,25 @@ modal.addEventListener('close', () => {
   const opener = modalOpener;
   if (opener?.isConnected && !opener.closest('[hidden]') && document.activeElement === document.body) opener.focus();
 });
+
+tutorialDialog.addEventListener('close', () => {
+  if (!setupReturn) return;
+  const { control, scrollTop } = setupReturn;
+  setupReturn = undefined;
+  modal.showModal();
+  modal.querySelector('.modal-body').scrollTop = scrollTop;
+  control.focus({ preventScroll: true });
+});
+
+function openTutorial(kind, control) {
+  tutorial.open(kind, () => {
+    visuals.skipCountdown();
+    if (!modal.open || modal.dataset.layout !== 'setup') return;
+    setupReturn = { control, scrollTop: modal.querySelector('.modal-body').scrollTop };
+    motion.clear(modal);
+    modal.close();
+  });
+}
 
 function renderHelp(opener) {
   if (session.round) {
@@ -174,9 +191,9 @@ function renderSettings(opener) {
     <div class="actions">
       ${hasUpdate() ? button('update-app', 'حدّث جوّ') : ''}
       ${installed() ? '' : button('install', 'ثبّت جوّ', 'outline')}
-      ${button('close', 'تم', 'outline')}
     </div>
-  `, opener);
+    <p class="muted small">عود الافتتاحية من أداء <a href="https://freesound.org/people/xserra/sounds/182730/" target="_blank" rel="noopener">أوركسترا تطوان أسمير، تسجيل xserra</a>. مقتطف محرّر بموجب <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener"><bdi>CC BY 4.0</bdi></a>.</p>
+  `, opener, 'settings');
 }
 
 function showInstall() {
@@ -214,7 +231,7 @@ function openSetup(kind, opener) {
     draft.teamNames = current?.squads.map((squad) => squad.name) ?? ['فريق البنفسجي', 'فريق الذهبي'];
     draft.teamTurns = current?.turns ?? 2;
   }
-  openModal(kind === 'choice' ? game.title + ' 🔥' : 'إعداد ' + game.title, setupView(draft, Boolean(session.round)), opener);
+  openModal('إعداد ' + game.title, setupView(draft, Boolean(session.round)), opener, 'setup');
   modal.dataset.visualProfile = game.visualProfile ?? 'jaw';
   visuals.atmosphere(game.visualProfile);
   updateCountControls();
@@ -558,7 +575,6 @@ function beginSetup(data) {
   session = next;
   closeModal();
   changeRound();
-  tutorial.open(kind, true);
 }
 
 function privateText() {
@@ -648,9 +664,17 @@ async function install(control) {
 function handleAction(control) {
   const { action, kind } = control.dataset;
   const round = session.round;
+  const roundMenu = control.closest('.round-menu');
   const effect = feedbackForAction(action);
   if (effect === 'press') motion.feedback(effect);
-  if (['help', 'settings', 'install'].includes(action)) conceal();
+  if (roundMenu || ['help', 'settings', 'install'].includes(action)) conceal();
+
+  let opener = control;
+  if (roundMenu) {
+    roundMenu.open = false;
+    opener = stage.querySelector('.round-menu > summary');
+    opener?.focus({ preventScroll: true });
+  }
   switch (action) {
     case 'focus-main':
       document.getElementById('main').focus();
@@ -659,7 +683,7 @@ function handleAction(control) {
     case 'games':
     case 'teams':
     case 'founder':
-      askToLeave(action, control);
+      askToLeave(action, opener);
       break;
     case 'founder-copy-profile':
       void runBusy(control, () => copyFounderProfile(control));
@@ -679,10 +703,10 @@ function handleAction(control) {
       if (session.round) updateRound({ animate: false });
       break;
     case 'help':
-      renderHelp(control);
+      renderHelp(opener);
       break;
     case 'settings':
-      renderSettings(control);
+      renderSettings(opener);
       break;
     case 'install':
       void install(control);
@@ -698,7 +722,7 @@ function handleAction(control) {
       openSetup(kind, control);
       break;
     case 'tutorial':
-      tutorial.open(kind);
+      openTutorial(kind, control);
       break;
     case 'choice-start':
       openSetup('choice', control);
@@ -862,6 +886,8 @@ function handleAction(control) {
 }
 
 document.addEventListener('click', (event) => {
+  const menu = stage.querySelector('.round-menu[open]');
+  if (menu && !menu.contains(event.target)) menu.open = false;
   const control = event.target.closest('[data-action]');
   if (!control || control.disabled || control.matches('[aria-disabled="true"], [aria-busy="true"]')) return;
   event.preventDefault();
@@ -951,6 +977,13 @@ modal.addEventListener('keydown', (event) => {
   (next || modal.querySelector('#setup-form [type="submit"]'))?.focus();
 });
 
+stage.addEventListener('keydown', (event) => {
+  const menu = event.target.closest('.round-menu[open]');
+  if (!menu || event.key !== 'Escape') return;
+  menu.open = false;
+  menu.querySelector('summary').focus();
+});
+
 stage.addEventListener('jaw:hold', (event) => {
   if (event.target.matches('.card-back') && session.round?.phase === 'cards' && !privateVisible) {
     stage.querySelector('[data-action="reveal"]')?.click();
@@ -974,8 +1007,9 @@ window.addEventListener('pagehide', (event) => {
 });
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) conceal();
-  else updateClock();
+  if (document.hidden) {
+    conceal();
+  } else updateClock();
 });
 window.addEventListener('pagehide', conceal);
 window.addEventListener('online', updateConnection);
@@ -985,12 +1019,13 @@ window.addEventListener('storage', (event) => {
   session = restoreSession(read(sessionKey));
   nightUnlocked = false;
   privateVisible = false;
+  if (welcome.open) return;
   if (session.round && browseTarget() !== 'founder') renderRound({ focus: false, animate: false });
   else renderBrowse(browseTarget(), { initial: true, quick: location.hash === '#quick-games' });
 });
 
 window.addEventListener('hashchange', () => {
-  if (location.hash === '#main') return;
+  if (welcome.open || location.hash === '#main') return;
   if (location.hash === '#founder') {
     renderBrowse('founder');
     return;
@@ -1015,14 +1050,16 @@ enableOffline({
   onInstallChange: updateInstall,
   onUpdate: () => announce('يتوفّر تحديث لجوّ في الإعدادات.'),
 });
-if (session.round && browseTarget() !== 'founder') {
-  setLocation('#round');
-  renderRound({ focus: false, animate: false });
-} else {
+function enterStartingPage(initial = false) {
   const target = browseTarget();
-  renderBrowse(target, { initial: true, quick: location.hash === '#quick-games' });
-  if (target === 'home') {
-    for (const logo of document.querySelectorAll('.jaw-intro-logo')) motion.play(logo, 'fade', 'page');
-    visuals.emit('intro', home.querySelector('.hero'));
+  if (session.round && target !== 'founder') {
+    setLocation('#round');
+    renderRound({ focus: !initial, animate: false });
+  } else {
+    renderBrowse(target, { initial, quick: location.hash === '#quick-games' });
+    if (!initial) motion.play(document.getElementById(target), 'fade', 'page');
   }
 }
+
+if (opening.isRequired()) opening.open();
+else enterStartingPage(true);

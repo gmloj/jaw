@@ -38,7 +38,7 @@ function choiceGroup(name, legend, values, selected) {
 export function nameFields(draft, start = 0) {
   return Array.from({ length: draft.count - start }, (_, index) => {
     const i = index + start;
-    const field = `<label class="name-field"><span>${number(i + 1).padStart(2, '٠')}</span>
+    const field = `<label class="name-field">
       <input class="field" name="player-${i}" data-player="${i}" maxlength="24" dir="auto" autocomplete="off" enterkeyhint="next"
              placeholder="${defaultPlayerName(i)}" aria-label="اسم اللاعب ${number(i + 1)}"
              value="${escape(draft.names[i] ?? '')}">
@@ -84,11 +84,16 @@ export function setupView(draft, canResume) {
   const game = games[draft.kind];
   const hasTimer = timeGames.includes(draft.kind);
   const countOptions = Array.from({ length: maxPlayers - game.min + 1 }, (_, index) => game.min + index);
+  const options = `${draft.kind === 'outsider' ? choiceGroup('difficulty', 'مستوى الكلمات', Object.entries(difficulties), draft.difficulty) : ''}
+    ${draft.kind === 'choice' ? choiceSetupFields(draft) : ''}
+    ${hasTimer ? `<label class="field-label timer-picker">${draft.kind === 'court' ? 'مؤقّت المرافعات' : 'مؤقّت النقاش'}
+      <select class="field" name="duration">${discussionDurations.map((value) =>
+        `<option value="${value}" ${value === draft.duration ? 'selected' : ''}>${value ? number(value) + ' ثانية' : 'بدون مؤقّت'}</option>`).join('')}</select>
+    </label>` : ''}`;
   return `
     <form id="setup-form" data-kind="${draft.kind}" class="setup-form">
-      <div class="setup-game">${mark(draft.kind)}<div><strong>${game.title}</strong><p>${game.blurb}</p></div></div>
-      <div class="setup-tutorial">${button('tutorial', 'شرح اللعبة', 'outline button-compact', `data-kind="${draft.kind}"`)}</div>
-      <details class="rules"><summary>كيف تلعبون؟</summary>${gameRules(draft.kind)}</details>
+      <div class="setup-game">${mark(draft.kind)}<p>${game.blurb}</p></div>
+      <div class="setup-tutorial">${button('tutorial', 'كيف نلعب؟', 'quiet', `data-kind="${draft.kind}"`)}</div>
       <div class="setup-count">
         <label class="field-label" for="player-count">عدد اللاعبين</label>
         <div class="count-control">
@@ -99,24 +104,22 @@ export function setupView(draft, canResume) {
           ${button('count-up', '+', 'outline button-step', 'aria-label="زيادة عدد اللاعبين"')}
         </div>
       </div>
-      ${draft.assignments ? teamSetupFields(draft) : ''}
-      <div class="field-label">أسماء اللاعبين</div>
-      <div id="player-fields" class="name-grid">${nameFields(draft)}</div>
-      <p class="small muted">الأسماء مرقّمة تلقائيًا، وتقدر تكتب أسماءكم إذا حبيت.</p>
       ${game.hostOnly ? '' : choiceGroup('mode', 'طريقة اللعب', [
         ['together', 'جهاز واحد', 'مرّر الجوال بين اللاعبين'],
         ['remote', 'روم صوتي', 'أرسل البطاقات بالخاص'],
       ], draft.mode)}
-      ${draft.kind === 'outsider' ? choiceGroup('difficulty', 'مستوى الكلمات', Object.entries(difficulties), draft.difficulty) : ''}
-      ${draft.kind === 'choice' ? choiceSetupFields(draft) : ''}
-      ${hasTimer ? `<label class="field-label timer-picker">${draft.kind === 'court' ? 'مؤقّت المرافعات' : 'مؤقّت النقاش'}
-        <select class="field" name="duration">${discussionDurations.map((value) =>
-          `<option value="${value}" ${value === draft.duration ? 'selected' : ''}>${value ? number(value) + ' ثانية' : 'بدون مؤقّت'}</option>`).join('')}</select>
-      </label>` : ''}
-      <p class="form-message" id="setup-error" role="alert"></p>
-      <div class="setup-actions">
-        ${submit(playIcon + (draft.kind === 'choice' ? ' ابدأ التحدي' : ' ابدأ الجولة'))}
-        ${canResume ? button('close', 'ارجع للجولة', 'outline') : ''}
+      <details class="setup-details"${draft.assignments ? ' open' : ''}>
+        <summary>${draft.assignments ? 'اللاعبون وتوزيع الفرق' : 'أسماء اللاعبين (اختياري)'}</summary>
+        ${draft.assignments ? teamSetupFields(draft) : ''}
+        <div id="player-fields" class="name-grid">${nameFields(draft)}</div>
+      </details>
+      ${options.trim() ? `<details class="setup-details"><summary>خيارات الجولة</summary>${options}</details>` : ''}
+      <div class="setup-footer">
+        <p class="form-message" id="setup-error" role="alert"></p>
+        <div class="setup-actions">
+          ${submit(playIcon + (draft.kind === 'choice' ? ' ابدأ التحدي' : ' ابدأ الجولة'))}
+          ${canResume ? button('close', 'ارجع للجولة', 'quiet') : ''}
+        </div>
       </div>
     </form>`;
 }
@@ -585,11 +588,16 @@ export function roundView(session, { privateVisible = false, nightUnlocked = fal
     <div class="stage-nav">
       <div class="stage-brand">${mark(round.kind)}<div><strong>${games[round.kind].title}</strong>
         <span class="stage-badge">${escape(badge)}${difficulty}</span></div></div>
-      <div class="stage-tools">
-        ${button('tutorial', 'شرح اللعبة', 'outline button-compact', `data-kind="${round.kind}"`)}
-        ${button('help', '<svg class="icon" aria-hidden="true"><use href="#icon-info"/></svg>', 'outline button-icon', 'aria-label="قواعد اللعبة" title="قواعد اللعبة"')}
-        ${button(teams ? 'teams' : 'games', ['result', 'team-result'].includes(round.phase) ? (teams ? 'ألعاب الفرق' : 'الألعاب') : 'إنهاء الجولة', 'outline button-compact')}
-      </div>
+      <details class="round-menu">
+        <summary class="button button-quiet"><svg class="icon" aria-hidden="true"><use href="#icon-more"/></svg> المزيد</summary>
+        <div class="round-menu-actions">
+          ${button('tutorial', 'جرّب الشرح', 'quiet', `data-kind="${round.kind}"`)}
+          ${button('help', 'قواعد اللعبة', 'quiet')}
+          ${button('settings', 'الإعدادات', 'quiet')}
+          ${button(teams ? 'teams' : 'games', ['result', 'team-result'].includes(round.phase) ?
+            (teams ? 'ألعاب الفرق' : 'الألعاب') : 'إنهاء الجولة', 'quiet round-exit')}
+        </div>
+      </details>
     </div>
     ${roundPanel(session, { privateVisible, nightUnlocked })}
   </div>`;

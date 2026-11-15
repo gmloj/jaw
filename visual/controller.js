@@ -57,6 +57,7 @@ export function createVisuals(document) {
         countdown?.remove();
         countdown = undefined;
     }
+    function syncCampfire() { updateCampfire?.(quality); }
     function update() {
         const next = effectiveQuality(requested, reduced, sluggish || batteryLow);
         if (quality !== next || reduced || document.hidden)
@@ -66,7 +67,7 @@ export function createVisuals(document) {
         quality = next;
         root.dataset.visualQuality = quality;
         root.toggleAttribute('data-visual-paused', document.hidden);
-        updateCampfire?.(quality);
+        syncCampfire();
     }
     function sample() {
         if (sampled || samplePending || requested === 'low' || reduced || document.hidden)
@@ -214,7 +215,7 @@ export function createVisuals(document) {
     }).catch(() => { });
     atmosphere('jaw');
     return {
-        apply, atmosphere, emit, clearEvent, startRound, skipCountdown,
+        apply, atmosphere, emit, clearEvent, startRound, skipCountdown, syncCampfire,
         destroy() {
             lifecycle.abort();
             window.cancelAnimationFrame(frame);

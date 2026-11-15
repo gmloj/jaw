@@ -43,6 +43,6 @@ export function particleCount(event, quality, reduced) {
 export function slowSample(frames, slow) {
     return frames >= 30 && slow / frames >= .28;
 }
-export function campfireCanPlay({ mobile, inView, pageHidden, quality }) {
-    return mobile && inView && !pageHidden && quality !== 'low';
+export function campfireCanPlay({ opening, finished, pageHidden, quality }) {
+    return opening && !finished && !pageHidden && quality !== 'low';
 }

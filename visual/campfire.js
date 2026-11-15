@@ -1,20 +1,16 @@
 import { campfireCanPlay } from './policy.js';
 export function mountCampfire(document, signal) {
     const video = document.querySelector('.jaw-campfire');
-    const window = document.defaultView;
+    const welcome = video?.closest('dialog');
     const source = video?.dataset.src;
-    if (!video?.parentElement || !source || !window?.IntersectionObserver)
+    if (!video || !welcome || !source)
         return;
-    const mobile = window.matchMedia('(max-width: 639px)');
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let inView = false;
-    let quality = 'low';
-    const sync = () => {
+    const sync = (quality) => {
         if (!campfireCanPlay({
-            mobile: mobile.matches,
-            inView,
+            opening: welcome.open && welcome.hasAttribute('data-sequence'),
+            finished: video.ended,
             pageHidden: document.hidden,
-            quality: reduced.matches ? 'low' : quality,
+            quality,
         })) {
             video.pause();
             return;
@@ -24,21 +20,8 @@ export function mountCampfire(document, signal) {
         if (video.paused)
             void video.play().catch(() => { });
     };
-    const observer = new window.IntersectionObserver(([entry]) => {
-        inView = entry.isIntersecting && entry.intersectionRatio >= .2;
-        sync();
-    }, { threshold: .2 });
     video.muted = true;
     video.addEventListener('playing', () => video.setAttribute('data-ready', ''), { signal });
-    mobile.addEventListener('change', sync, { signal });
-    reduced.addEventListener('change', sync, { signal });
-    signal.addEventListener('abort', () => {
-        observer.disconnect();
-        video.pause();
-    }, { once: true });
-    observer.observe(video.parentElement);
-    return (level) => {
-        quality = level;
-        sync();
-    };
+    signal.addEventListener('abort', () => video.pause(), { once: true });
+    return sync;
 }

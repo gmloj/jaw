@@ -1,11 +1,11 @@
-const cacheName = 'jaw-choice-challenge-v2';
+const cacheName = 'jaw-opening-start-tap-v1';
 const cachePrefixes = ['jaw-', 'dawrak-'];
 const files = [
-  '', 'style.css', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'team-views.js', 'engine.js', 'offline.js',
+  '', 'style.css', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'welcome.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'team-views.js', 'engine.js', 'offline.js',
   'manifest.webmanifest', 'vendor/gsap-3.15.1.min.js', 'assets/plex-arabic-400.woff2', 'assets/plex-arabic-700.woff2',
   'assets/plex-latin-400.woff2', 'assets/plex-latin-700.woff2', 'assets/jaw-wordmark.webp', 'assets/isco-jackaroo.webp',
   'assets/jaw-icon-v2-192.png', 'assets/jaw-icon-v2-512.png', 'assets/jaw-icon-v2-180.png',
-  'assets/jaw-icon-v2-maskable.png', 'assets/jaw-campfire.webp',
+  'assets/jaw-icon-v2-maskable.png', 'assets/jaw-campfire.webp', 'assets/jaw-opening-oud.mp3',
   'assets/jaw-lounge.webp', 'assets/jaw-lounge-small.webp', 'assets/jaw-game-0.webp',
   'assets/jaw-game-1.webp', 'assets/jaw-game-2.webp', 'assets/jaw-game-3.webp',
   'assets/jaw-evidence.webp', 'assets/jaw-reverse.webp', 'assets/jaw-know.webp',
