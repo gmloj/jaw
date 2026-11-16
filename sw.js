@@ -1,7 +1,7 @@
-const cacheName = 'jaw-installed-update-v1';
+const cacheName = 'jaw-room-upgrades-v1';
 const cachePrefixes = ['jaw-', 'dawrak-'];
 const files = [
-  '', 'style.css', 'home-discovery.css', 'home-discovery.js', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'welcome.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'hideout.js', 'team-views.js', 'engine.js', 'offline.js',
+  '', 'audience.html', 'audience.js', 'audience-state.js', 'style.css', 'home-discovery.css', 'home-discovery.js', 'motion.css', 'visual.css', 'founder.css', 'visual/policy.js', 'visual/controller.js', 'visual/campfire.js', 'motion/policy.js', 'motion/controller.js', 'motion/gestures.js', 'app.js', 'welcome.js', 'views.js', 'tutorial.js', 'content.js', 'choice-questions.js', 'choice-engine.js', 'party-content.js', 'team-prompts.js', 'team-engine.js', 'hideout.js', 'team-views.js', 'engine.js', 'offline.js',
   'manifest.webmanifest', 'vendor/gsap-3.15.1.min.js', 'assets/plex-arabic-400.woff2', 'assets/plex-arabic-700.woff2',
   'assets/plex-latin-400.woff2', 'assets/plex-latin-700.woff2', 'assets/jaw-wordmark.webp', 'assets/isco-jackaroo.webp',
   'assets/jaw-icon-v2-192.png', 'assets/jaw-icon-v2-512.png', 'assets/jaw-icon-v2-180.png',

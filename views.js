@@ -1,8 +1,8 @@
-import { choiceCategories, choiceDurations, choiceLevels, choiceSettings, choiceTurns, choiceVoter } from './choice-engine.js';
+import { choiceCategories, choiceDurations, choiceLevels, choiceSettings, choiceTurns } from './choice-engine.js';
 import { teamAssignment, teamRoundPanel, teamSetupFields } from './team-views.js';
 import { teamKinds } from './team-engine.js';
 import { evidenceCases } from './party-content.js';
-import { evidenceClueLimit, reverseQuestionLimit, knowGuessers, anonymousQuestionLimit, discussionDurations, maxPlayers, nightTurn, playerCard, questionTurn, clockRemaining, currentPlayer, voteResult } from './engine.js';
+import { evidenceClueLimit, reverseQuestionLimit, liarAnswerLimit, voteOptions, deliveredCards, knowGuessers, anonymousQuestionLimit, discussionDurations, maxPlayers, nightTurn, playerCard, questionTurn, clockRemaining, currentPlayer, voteResult } from './engine.js';
 import { difficulties, games, roles } from './content.js';
 
 const formatter = new Intl.NumberFormat('ar-SA');
@@ -143,36 +143,58 @@ function privateCopy() {
   return '<p class="copy-message" id="copy-message" aria-live="polite"></p><textarea class="field" id="manual-copy" aria-label="نص الرسالة الخاصة" readonly hidden></textarea>';
 }
 
+function cardBody(round, card) {
+  return `<div class="secret-card">
+    <span>${round.kind === 'outsider' ? 'كلمتك هي' : round.kind === 'liar' ? 'سؤالك السرّي' : 'دورك السرّي'}</span>
+    <h2>${escape(card.title)}</h2>
+    <p>${escape(card.detail)}</p>
+    ${card.extra ? '<p>' + escape(card.extra) + '</p>' : ''}
+  </div>`;
+}
+
+function remoteCards(session, selected) {
+  const { round } = session;
+  const delivered = deliveredCards(round);
+  const card = selected && playerCard(session, selected);
+  const sent = delivered.includes(selected);
+  const last = delivered.length === round.order.length - 1 && !sent;
+  return panel('توزيع بطاقات الشلّة', `
+    <p>افتح أي بطاقة وانسخها لصاحبها بالخاص، وبعد ما ترسلها اضغط «تم الإرسال».</p>
+    <p>${number(delivered.length)} من ${number(round.order.length)} اتوزّعت</p>
+    <ul class="score-list room-roster" aria-label="حالة توزيع البطاقات">${round.order.map((id) =>
+      `<li${id === selected ? ' aria-current="step"' : ''}>
+        <span>${name(session, id)} · ${delivered.includes(id) ? 'تم الإرسال' : 'بانتظار الإرسال'}</span>
+        ${button('pick-card', 'بطاقة ' + escape(playerName(session, id)), 'outline button-compact', `data-recipient="${id}"`)}
+      </li>`).join('')}</ul>
+    ${card ? `<section aria-label="بطاقة ${escape(playerName(session, selected))}">
+      ${cardBody(round, card)}
+      <div class="actions">
+        ${button('copy-card', 'انسخ البطاقة', 'outline')}
+        ${sent ? '' : button('mark-card', last ? 'تم الإرسال · ابدأ الجولة' : 'تم الإرسال', 'primary', `data-recipient="${selected}"`)}
+        ${button('hide-private', 'أخفِ البطاقة', 'quiet')}
+      </div>
+      ${privateCopy()}
+    </section>` : ''}
+  `, 'stage-center');
+}
+
 function renderCards(session, visible) {
-  const { round, mode } = session;
+  const { round } = session;
   const player = currentPlayer(session);
-  const isRemote = mode === 'remote';
   const last = round.index === round.order.length - 1;
   const progress = step('توزيع البطاقات', round.index + 1, round.order.length);
-  const nextLabel = round.kind === 'mafia' && !isRemote ? 'أخفِ البطاقة وسلّم الجوال للراوي' : 'أخفِ البطاقة وابدأ الجولة';
-  const hideLabel = last ? nextLabel : isRemote ? 'أخفِ البطاقة وانتقل للي بعده' : 'أخفِ البطاقة وسلّم الجوال';
-  if (!visible) {
-    return panel('الدور على ' + name(session, player.id), `
-      ${progress}
-      <p>${isRemote ? 'افتح البطاقة وانسخها عشان ترسلها لصاحبها بالخاص.' : 'سلّم الجوال لصاحب البطاقة وخله يفتحها لحاله.'}</p>
-      <div class="card-back" data-gesture="hold">${mark(round.kind)}</div>
-      <div class="actions">${button('reveal', isRemote ? 'افتح البطاقة' : 'اعرض بطاقتي')}</div>
-    `, 'stage-center');
-  }
-  const card = playerCard(session);
+  if (!visible) return panel('الدور على ' + name(session, player.id), `
+    ${progress}
+    <p>سلّم الجوال لصاحب البطاقة وخله يفتحها لحاله.</p>
+    <div class="card-back" data-gesture="hold">${mark(round.kind)}</div>
+    <div class="actions">${button('reveal', 'اعرض بطاقتي')}</div>
+  `, 'stage-center');
+  const hideLabel = last ? round.kind === 'mafia' ? 'أخفِ البطاقة وسلّم الجوال للراوي' : 'أخفِ البطاقة وابدأ الجولة' :
+    'أخفِ البطاقة وسلّم الجوال';
   return panel('بطاقة ' + name(session, player.id), `
     ${progress}
-    <div class="secret-card">
-      <span>${round.kind === 'outsider' ? 'كلمتك هي' : round.kind === 'liar' ? 'سؤالك السرّي' : 'دورك السرّي'}</span>
-      <h2>${escape(card.title)}</h2>
-      <p>${escape(card.detail)}</p>
-      ${card.extra ? '<p>' + escape(card.extra) + '</p>' : ''}
-    </div>
-    <div class="actions">
-      ${isRemote ? button('copy-card', 'انسخ البطاقة', 'outline') : ''}
-      ${button('advance-card', hideLabel)}
-    </div>
-    ${isRemote ? privateCopy() : ''}
+    ${cardBody(round, playerCard(session))}
+    <div class="actions">${button('advance-card', hideLabel)}</div>
   `, 'stage-center stage-deal');
 }
 
@@ -223,12 +245,19 @@ function renderHearing(session) {
   return panel(title, `
     ${step('جلسة المحكمة', round.index + 1, phases.length)}
     <div class="prompt-box">${escape(round.prompt)}</div>
+    ${courtRoster(session)}
     <p>${description}</p>
+    ${round.index === 2 ? `<p class="small">له حق التصويت: ${round.order.filter((id) => id !== prosecutor && id !== defendant).map((id) => name(session, id)).join('، ')}</p>` : ''}
     ${clockView(session)}
     <div class="actions">
       ${round.index === 2 ? button('begin-vote', 'صوّتوا على الحكم') : button('court-next', round.index === 0 ? 'أعطِ الدفاع دوره' : 'ابدأ المداولة')}
     </div>
   `, 'stage-center stage-court');
+}
+
+function courtRoster(session) {
+  const { judge, prosecutor, defendant } = session.round.court;
+  return scoreList(session, [[judge, 'القاضي'], [prosecutor, 'الادّعاء'], [defendant, 'الدفاع']]);
 }
 
 function renderAnswers(session) {
@@ -237,7 +266,12 @@ function renderAnswers(session) {
   return panel('إجابة ' + name(session, player.id), `
     ${step('الإجابات', round.index + 1, round.order.length)}
     <p>قول إجابتك بصوتك وخلك مختصر. احتفظ بالسؤال لنفسك لين يخلص الكل.</p>
-    <div class="actions">${button('answer-next', round.index + 1 === round.order.length ? 'اكشف سؤال الأغلبية' : 'اللاعب التالي')}</div>
+    <form class="stage-form" id="liar-answer-form">
+      <label class="field-label">سجّل الإجابة (اختياري)
+        <input class="field" name="answer" maxlength="${liarAnswerLimit}" dir="auto" autocomplete="off">
+      </label>
+      <div class="actions">${submit(round.index + 1 === round.order.length ? 'اكشف سؤال الأغلبية' : 'اللاعب التالي')}</div>
+    </form>
   `, 'stage-center');
 }
 
@@ -255,6 +289,8 @@ function renderDiscussion(session) {
     return panel('هذا سؤال الأغلبية', `
       <div class="prompt-box">${escape(round.prompt)}</div>
       <p>مين جاوب عن سؤال مختلف؟ ناقشوا الإجابات ثم صوّتوا.</p>
+      ${Object.keys(round.answers ?? {}).length ? scoreList(session, round.order.filter((id) => round.answers[id])
+        .map((id) => [id, escape(round.answers[id])])) : ''}
       ${clockView(session)}
       <div class="actions">${button('begin-vote', 'ابدأ التصويت')}</div>
     `, 'stage-center');
@@ -269,9 +305,9 @@ function renderDiscussion(session) {
 function renderVote(session) {
   const { round } = session;
   const voter = currentPlayer(session);
-  if (round.kind === 'reverse') return renderReverseVote(session, voter);
+  if (session.mode === 'remote' || ['reverse', 'social'].includes(round.kind)) return renderBatchVote(session);
   const court = round.kind === 'court' ? round.court : null;
-  const candidates = round.runoffIds || round.voters;
+  const candidates = voteOptions(round, round.index);
   const choices = court
     ? [[court.prosecutor, 'إدانة'], [court.defendant, 'براءة']]
     : candidates.map((id) => [id, name(session, id)]);
@@ -281,6 +317,7 @@ function renderVote(session) {
   const question = court ? 'كيف تحكم؟' : round.kind === 'social' ? escape(round.prompt) : round.runoffIds ? 'تصويت الحسم' : 'مين تختار؟';
   return panel('صوت ' + name(session, voter.id), `
     ${step('التصويت', round.index + 1, round.voters.length)}
+    ${court ? courtRoster(session) : ''}
     <form class="stage-form" id="vote-form">
       <fieldset class="vote-field">
         <legend>${question}</legend>
@@ -321,7 +358,13 @@ function renderNight(session, { privateVisible, nightUnlocked }) {
   }
   const visible = privateVisible;
   const turn = nightTurn(session);
-  const progress = step('خطوات الليلة', turn.index, turn.total);
+  const nightRoster = session.mode === 'remote' ? `<ul class="score-list room-roster" aria-label="حالة الأدوار">
+    ${Object.keys(nightPrompts).filter((role) => session.round.alive.some((id) => session.round.roles[id] === role)).map((role) => {
+      const choice = session.round.nightChoices?.[role];
+      const status = role === turn.role ? 'الدور الآن' : choice === null ? 'تخطّى' : choice === undefined ? 'بانتظار الاختيار' : 'اتسجّل';
+      return `<li${role === turn.role ? ' aria-current="step"' : ''}>${roles[role].title}<strong>${status}</strong></li>`;
+    }).join('')}</ul>` : '';
+  const progress = step('خطوات الليلة', turn.index, turn.total) + nightRoster;
   if (turn.role === 'report') {
     const report = turn.report;
     return panel('الليلة ' + number(day), `
@@ -399,7 +442,8 @@ function renderChallenge(session) {
     ${clockView(session, true)}
     <div class="actions">
       ${button('challenge-pass', 'نجح +١', 'primary', round.clock.started && !expired ? '' : 'disabled')}
-      ${button('challenge-fail', expired ? 'انتقل للي بعده' : 'تخطّى الدور', 'outline', round.clock.started ? '' : 'disabled')}
+      ${button('challenge-fail', expired ? 'انتهى الوقت · سجّل عدم الإنجاز' : 'ما أنجز التحدي', 'outline', round.clock.started ? '' : 'disabled')}
+      ${button('challenge-skip', 'تخطّى التحدي', 'quiet', round.clock.started && !expired ? '' : 'disabled')}
     </div>
   `, 'stage-center');
 }
@@ -452,7 +496,9 @@ function renderResult(session) {
   } else {
     title = 'نتيجة التحدّي';
     const scores = round.order.map((id) => [id, round.scores[id]]).sort((a, b) => b[1] - a[1]);
-    content = scoreList(session, scores.map(([id, score]) => [id, number(score) + (score ? ' نقطة' : ' نقاط')]));
+    const labels = { passed: 'أنجز التحدي', missed: 'ما أنجز التحدي', skipped: 'تخطّى التحدي' };
+    content = scoreList(session, scores.map(([id, score]) => [id,
+      [labels[round.challengeOutcomes?.[id]], number(score) + (score ? ' نقطة' : ' نقاط')].filter(Boolean).join(' · ')]));
   }
   const again = round.kind === 'social' ? button('social-next', 'سؤال جديد') : button('restart', 'جولة ثانية');
   return panel(title, `
@@ -488,10 +534,20 @@ function renderChoice(session) {
       <strong>${escape(question.options[selected])}</strong></div>` : ''}
     ${phase === 'picking' ? clockView(session) : ''}
     ${isRating ? `<section class="choice-rating" aria-label="تقييم التبرير">
-      <h2 id="choice-rating-title" tabindex="-1">قيّم التبرير يا ${name(session, choiceVoter(round))}</h2>
-      ${step('تقييم الشلّة', votes.length + 1, order.length - 1)}
-      <div class="actions choice-ratings">${['ما أقنعني', 'مقنع', 'صريح وقوي'].map((label, points) =>
-        button('choice-rate', label + ' · ' + number(points), 'outline', `data-voter="${choiceVoter(round)}" data-points="${points}"`)).join('')}</div>
+      <h2 id="choice-rating-title" tabindex="-1">تقييم الشلّة</h2>
+      <p class="small">٠ · بلا سبب واضح. ١ · ذكر سبب مفهوم. ٢ · أعطى سبب واضح ومثال أو تفصيل يقنع الشلّة.</p>
+      <form class="stage-form" id="choice-rating-form">
+        <p data-batch-progress role="status">تسجّل ${number(votes.length)} من ${number(order.length - 1)}</p>
+        ${order.filter((voter) => voter !== id).slice(votes.length).map((voter) => `
+          <label class="field-label">تقييم ${name(session, voter)}
+            <select class="field" name="rating" data-batch-field required>
+              <option value="" disabled selected>اختر التقييم</option>
+              <option value="0">ما أقنعني · ٠</option><option value="1">مقنع · ١</option>
+              <option value="2">صريح وقوي · ٢</option>
+            </select>
+          </label>`).join('')}
+        <div class="actions">${submit('ثبّت التقييمات')}</div>
+      </form>
     </section>` : ''}
     ${isReview ? `
       <p class="choice-review">${outcome === 'rated' ? `نقاط التبرير <strong>+${number(earned)}</strong>` :
@@ -542,6 +598,7 @@ function renderAnonymous(session) {
     `, 'stage-center anonymous-reveal');
   }
 
+  const openedCount = questions.filter((card) => card.opened).length;
   const cards = questions.map(({ recipient, opened }, index) => `
     <li>
       <button class="anonymous-card" type="button" data-action="anonymous-open" data-card="${index}">
@@ -566,8 +623,10 @@ function renderAnonymous(session) {
     </form>
     <section class="anonymous-cards" aria-labelledby="anonymous-cards-title">
       <h2 id="anonymous-cards-title">بطاقات الأسئلة</h2>
+      <p>${number(openedCount)} انفتحت · ${number(questions.length - openedCount)} باقي</p>
       ${cards ? `<ul class="anonymous-grid">${cards}</ul>` : '<p class="muted">أول سؤال تحفظه بيطلع هنا.</p>'}
     </section>
+    <div class="actions">${button('games', 'أنه الجلسة', 'outline')}</div>
   `);
 }
 
@@ -578,7 +637,7 @@ const stageViews = {
   'choice-review': renderChoice, anonymous: renderAnonymous, day: renderDay, dayResult: renderDayResult, turn: renderChallenge, result: renderResult,
 };
 
-export function roundView(session, { privateVisible = false, nightUnlocked = false } = {}) {
+export function roundView(session, { privateVisible = false, nightUnlocked = false, privateCardId = null } = {}) {
   const { round, mode } = session;
   const teams = teamKinds.includes(round.kind);
   const difficulty = round.kind === 'outsider' ? ' · ' + difficulties[round.settings.difficulty] : '';
@@ -600,13 +659,19 @@ export function roundView(session, { privateVisible = false, nightUnlocked = fal
         </div>
       </details>
     </div>
-    ${roundPanel(session, { privateVisible, nightUnlocked })}
+    ${(round.kind === 'hideout' || (round.kind === 'mafia' && mode === 'remote')) ? `
+      <div class="actions">
+        ${button('audience-open', 'افتح شاشة اللاعبين', 'outline')}
+        <p class="small" id="audience-help" role="status">شارك تبويب اللاعبين عشان تبقى شاشة المدير خاصة.</p>
+      </div>` : ''}
+    ${roundPanel(session, { privateVisible, nightUnlocked, privateCardId })}
   </div>`;
 }
 
-export function roundPanel(session, { privateVisible = false, nightUnlocked = false } = {}) {
+export function roundPanel(session, { privateVisible = false, nightUnlocked = false, privateCardId = null } = {}) {
   const { round } = session;
   if (teamKinds.includes(round.kind)) return teamRoundPanel(round, { privateVisible });
+  if (round.phase === 'cards' && session.mode === 'remote') return remoteCards(session, privateVisible ? privateCardId : null);
   if (round.phase === 'night') return renderNight(session, { privateVisible, nightUnlocked });
   return stageViews[round.phase](session, privateVisible);
 }
@@ -625,6 +690,7 @@ function renderEvidence(session) {
   return panel(escape(mystery.title), `
     <div class="prompt-box">${escape(mystery.scenario)}</div>
     ${clockView(session, true)}
+    <p class="small">تقدرون تفتحون ${number(evidenceClueLimit)} من ${number(mystery.clues.length)} · باقي ${number(evidenceClueLimit - round.openedClues.length)}</p>
     ${step('الأدلة المفتوحة', round.openedClues.length, evidenceClueLimit)}
     <p class="small muted">${!round.clock.started ? 'اقرؤوا القضية بصوت عالٍ، وبعدها شغّلوا المؤقّت عشان تنفتح الأدلة.' :
       'اختاروا أدلتكم، ولما تتفقون على مشتبه به ثبّتوا تخمينكم قبل نهاية الوقت.'}</p>
@@ -664,6 +730,7 @@ function renderReverse(session) {
     <div class="prompt-box">${escape(round.prompt)}</div>
     <p>اقرأ الجواب للشلّة. كل واحد يرسل سؤاله لك بالخاص.</p>
     ${step('الأسئلة المسجّلة', round.entries.length, round.order.length)}
+    ${pending.length ? `<p>باقي: ${pending.map((player) => name(session, player.id)).join('، ')}</p>` : ''}
     ${pending.length ? `<form class="stage-form party-write" id="reverse-form">
       <label class="field-label" for="reverse-author">صاحب السؤال</label>
       <select id="reverse-author" class="field" name="author" required>
@@ -680,24 +747,33 @@ function renderReverse(session) {
   `);
 }
 
-function renderReverseVote(session, voter) {
+function renderBatchVote(session) {
   const { round } = session;
-  const options = round.entries.map((entry, index) => entry.author === voter.id ? '' :
-    `<label class="vote-option"><input type="radio" name="vote" value="${index}" required>
-      <span><strong>سؤال ${number(index + 1)}</strong><span dir="auto">${escape(entry.text)}</span></span></label>`).join('');
-  return panel('صوّت يا ' + name(session, voter.id), `
-    ${step('التصويت', round.index + 1, round.voters.length)}
-    <div class="prompt-box">${escape(round.prompt)}</div>
-    <form class="stage-form" id="vote-form">
-      <fieldset class="vote-field">
-        <legend>أي سؤال راكب على الجواب أكثر؟</legend>
-        <div class="vote-grid reverse-votes">${options}
-          <label class="vote-option"><input type="radio" name="vote" value="skip" required> بدون تصويت</label>
-        </div>
-      </fieldset>
-      <div class="actions">${submit('ثبّت الصوت')}</div>
-    </form>
-  `);
+  const reverse = round.kind === 'reverse';
+  const court = round.kind === 'court';
+  const title = reverse ? 'أي سؤال راكب على الجواب أكثر؟' :
+    round.kind === 'social' ? escape(round.prompt) : court ? 'صوّتوا على الحكم' : 'تصويت الشلّة';
+  const rows = round.voters.map((id, index) => {
+    if (index < round.index) return `<p>${name(session, id)} · اتسجّل صوته</p>`;
+    const options = voteOptions(round, index).map((candidate) => {
+      const label = reverse ? escape(round.entries[candidate].text) :
+        court ? candidate === round.court.prosecutor ? 'إدانة' : 'براءة' : escape(playerName(session, candidate));
+      return `<option value="${candidate}">${label}</option>`;
+    }).join('');
+    return `<label class="field-label">صوت ${name(session, id)}
+      <select class="field" name="vote-${index}" data-batch-field required>
+        <option value="" disabled selected>اختر التصويت</option>${options}
+        <option value="skip">امتنع عن التصويت</option>
+      </select></label>`;
+  }).join('');
+  return panel(title, `
+    ${reverse ? `<div class="prompt-box">${escape(round.prompt)}</div>` : ''}
+    ${court ? courtRoster(session) : ''}
+    <form class="stage-form" id="batch-vote-form">
+      <p data-batch-progress role="status">تسجّل ${number(round.index)} من ${number(round.voters.length)}</p>
+      ${rows}
+      <div class="actions">${submit('ثبّت الأصوات واعرض الحصيلة')}</div>
+    </form>`);
 }
 
 function renderReverseResult(session) {
@@ -730,11 +806,12 @@ function renderKnow(session) {
     ${isReveal ? `
       <p class="know-answer">${escape(round.prompt.options[round.secretAnswer])}</p>
       ${scoreList(session, guessers.map((id, index) => [id,
-        round.guesses[index] === round.secretAnswer ? '+١ نقطة' : round.guesses[index] === null ? 'تخطّى' : '٠ نقاط']))}
+        round.guesses[index] === null ? 'تخطّى' : escape(round.prompt.options[round.guesses[index]]) +
+          (round.guesses[index] === round.secretAnswer ? ' · +١ نقطة' : ' · ٠ نقاط')]))}
       <div class="actions">${button('know-next', round.index + 1 === round.order.length ? 'شوفوا النتيجة' : 'الدور اللي بعده')}</div>
     ` : `
       <p>${isAnswer ? 'خلّ صاحب الدور يرسل اختياره لك بالخاص، ثم سجّله.' :
-        'وش تتوقّعون إن ' + name(session, player.id) + ' اختار؟'}</p>
+        'اختياره محفوظ بالسر. وش تتوقّعون إن ' + name(session, player.id) + ' اختار؟'}</p>
       ${isAnswer ? '' : step('التخمينات', round.guesses.length + 1, guessers.length)}
       <div class="choice-pairs" role="group" aria-label="الخياران">${round.prompt.options.map((option, index) =>
         `<button class="choice-pair" type="button" data-action="${isAnswer ? 'know-answer' : 'know-guess'}" data-option="${index}">

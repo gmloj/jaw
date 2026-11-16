@@ -2,7 +2,7 @@ import {
   addAnonymousQuestion, addReverseEntry, advanceAnswer, advanceCard, advanceCourt,
   beginChoiceRating, nextChoicePrompt, rateChoice, beginDiscussion, beginVote, castVote, configureSession, createSession, finishNight,
   nightTurn, openAnonymousQuestion, openEvidenceClue, recordChallenge, recordKnowAnswer,
-  recordKnowGuess, recordNightChoice, resolveEvidence, selectChoice, startClock, startGame,
+  recordKnowGuess, recordNightChoice, resolveEvidence, selectChoice, startClock, startGame, voteOptions,
 } from './engine.js';
 import { games } from './content.js';
 import { reduceTeamGame } from './team-engine.js';
@@ -11,8 +11,8 @@ import { defaultPlayerName, number, roundPanel } from './views.js';
 const action = (name) => '[data-action="' + name + '"]';
 const teamAction = (name) => '[data-team-action="' + name + '"]';
 const submit = (form) => '#' + form + ' [type="submit"]';
-const vote = ['.vote-option', 'اختاروا اسمًا، ثم ثبّتوا الصوت.'];
-const voteSubmit = [submit('vote-form'), 'ثبّت صوت اللاعب، وبعدها يجي دور اللي بعده.'];
+const vote = ['.vote-option, #batch-vote-form select', 'اختاروا الصوت لكل لاعب.'];
+const voteSubmit = [submit('batch-vote-form') + ', ' + submit('vote-form'), 'ثبّتوا الأصوات بعد تسجيلها.'];
 
 function dealAll(session) {
   for (const player of session.players) advanceCard(session);
@@ -28,8 +28,10 @@ function dealSteps(session, show, secretText) {
 function votes(session, show) {
   show(...vote);
   show(...voteSubmit);
-  const first = session.round.voters[0];
-  for (const player of session.round.voters) castVote(session, first);
+  const target = session.round.voters[0];
+  for (let i = 0; i < session.round.voters.length; i++) {
+    castVote(session, voteOptions(session.round, i).includes(target) ? target : null);
+  }
 }
 
 const lessons = {
@@ -76,7 +78,7 @@ const lessons = {
   },
   liar(session, show) {
     dealSteps(session, show, 'اقرأ سؤالك لحالك. ممكن يكون مختلف عن سؤال الشلّة.');
-    show(action('answer-next'), 'بعد ما يقول إجابته، انتقل للي بعده.');
+    show(submit('liar-answer-form'), 'بعد ما يقول إجابته، انتقل للي بعده.');
     for (const player of session.players) advanceAnswer(session);
     show('.prompt-box', 'هنا ينكشف سؤال الأغلبية. ناقشوا مين جاوب عن سؤال مختلف.');
     show(action('begin-vote'), 'إذا خلص النقاش، ابدأ التصويت.');
@@ -89,7 +91,7 @@ const lessons = {
     selectChoice(session, 0);
     show(action('choice-rate-start'), 'قول ليش اخترت كذا، وبعدها خلّ الشلّة تقيّم تبريرك.');
     beginChoiceRating(session);
-    show(action('choice-rate'), 'سجّل تقييم كل لاعب من صفر إلى نقطتين.');
+    show('#choice-rating-form select', 'سجّل تقييم كل لاعب من صفر إلى نقطتين.');
     rateChoice(session, session.round.order[1], 2);
     show(submit('choice-next-form'), 'بعد ما تشوف نقاط التبرير، اضغط السؤال التالي.');
     nextChoicePrompt(session, () => .42);
@@ -140,7 +142,7 @@ const lessons = {
     addReverseEntry(session, session.players[1].id, 'وش تقول إذا تأخرت على الشلّة؟');
     show(action('begin-vote'), 'افتح التصويت على أنسب سؤال للجواب.');
     beginVote(session);
-    show('.vote-option', 'كل لاعب يصوّت لسؤال من أسئلة الشلّة.');
+    show(...vote);
     show(...voteSubmit);
   },
   know(session, show) {
@@ -156,7 +158,7 @@ const lessons = {
     session.round = reduceTeamGame(session.round, 'start');
     show('.taboo-words', 'الشارح يلمّح للكلمة ويتجنّب الكلمات هذي.');
     show(teamAction('correct'), 'إذا خمّن الفريق صح، سجّل نقطة هنا.');
-    show(teamAction('skip'), 'إذا قال كلمة ممنوعة، انتقل للبطاقة اللي بعدها.');
+    show(teamAction('violation'), 'إذا قال كلمة ممنوعة، سجّل المخالفة وانتقل للبطاقة اللي بعدها.');
     show(teamAction('finish'), 'أنه الدور إذا خلص الوقت.');
     session.round = reduceTeamGame(session.round, 'correct');
     session.round = reduceTeamGame(session.round, 'finish');
@@ -184,9 +186,9 @@ const lessons = {
     session.round = reduceTeamGame(session.round, 'bid', 2);
     show(teamAction('challenge'), 'إذا ما تبغون ترفعون العدد، تحدّوا الفريق الثاني.');
     session.round = reduceTeamGame(session.round, 'challenge');
-    show(teamAction('correct'), 'احسب كل إجابة صحيحة ومختلفة مرة واحدة.');
-    session.round = reduceTeamGame(session.round, 'correct');
-    session.round = reduceTeamGame(session.round, 'correct');
+    show(submit('auction-answer-form'), 'احسب كل إجابة صحيحة ومختلفة مرة واحدة.');
+    session.round = reduceTeamGame(session.round, 'correct', 'جدة');
+    session.round = reduceTeamGame(session.round, 'correct', 'الرياض');
     show(teamAction('next'), 'شوف مين أخذ النقطة ثم انتقل للدور التالي.');
   },
 };

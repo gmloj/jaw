@@ -70,10 +70,12 @@ function tabooPlay(team) {
     <div class="team-meta">
       <span>صح · ${number(team.pointCount)}</span>
       <span>بطاقات تجاوزتوها · ${number(team.skipped)}</span>
+      <span>كلمات ممنوعة · ${number(team.violations ?? 0)}</span>
     </div>
     <div class="actions">
       ${withAction('correct', 'خمنوها صح', 'primary', disabled)}
-      ${withAction('skip', 'تجاوز أو مخالفة', 'outline', disabled)}
+      ${withAction('skip', 'تجاوز البطاقة', 'outline', disabled)}
+      ${withAction('violation', 'قال كلمة ممنوعة', 'outline', disabled)}
       ${button('team-copy', 'انسخ للشارح', 'outline')}
       ${withAction('finish', 'أنه دور الفريق', 'outline')}
     </div>
@@ -101,21 +103,37 @@ function auctionBid(team) {
   `;
 }
 
+function auctionAnswers(team) {
+  return team.accepted?.length ? `<ol class="score-list" aria-label="الإجابات المقبولة">
+    ${team.accepted.map((answer) => `<li>${person(answer)}</li>`).join('')}
+  </ol>` : '';
+}
+
 function auctionPlay(team) {
   return `
     ${teamClock(team)}
     <div class="team-prompt"><strong>${escape(team.prompt)}</strong></div>
     <p class="team-players">${person(team.squads[team.bid.team].name)} · ${number(team.pointCount)} من ${number(team.bid.amount)}</p>
     <progress class="team-progress" aria-label="الإجابات المقبولة" value="${team.pointCount}" max="${team.bid.amount}"></progress>
-    <p class="muted">اقبل كل إجابة صحيحة ومختلفة مرة واحدة.</p>
+    <p class="muted">سجّل كل إجابة صحيحة ومختلفة مرة واحدة.</p>
+    ${auctionAnswers(team)}
+    <form class="stage-form" id="auction-answer-form">
+      <label class="field-label">الإجابة المقبولة
+        <input class="field" name="answer" maxlength="80" autocomplete="off" dir="auto" required ${team.endsAt === null ? 'disabled' : ''}>
+      </label>
+      <p class="form-message" id="auction-answer-error" role="alert"></p>
+      <div class="actions">
+        <button class="button button-primary" type="submit" ${team.endsAt === null ? 'disabled' : ''}>احسب إجابة صحيحة</button>
+      </div>
+    </form>
     <div class="actions">
-      ${withAction('correct', 'احسب إجابة صحيحة', 'primary', team.endsAt === null ? 'disabled' : '')}
+      ${team.accepted?.length ? withAction('undo', 'تراجع عن آخر إجابة', 'outline') : ''}
       ${withAction('finish', 'ما قدروا يكملون', 'outline')}
     </div>
   `;
 }
 
-function summary(team) {
+function summary(kind, team) {
   const { result, team: awarded, points } = team.explanation;
   const winner = awarded === null ? '' : person(team.squads[awarded].name);
   const message = {
@@ -123,7 +141,11 @@ function summary(team) {
     'auction-won': `${winner} وصل للعدد في الوقت. له نقطة.`,
     'auction-lost': `ما اكتمل العدد. النقطة لـ${winner}.`,
   }[result];
-  return `<p class="team-summary">${message}</p><div class="actions">
+  return `<p class="team-summary">${message}</p>
+    ${kind === 'auction' ? auctionAnswers(team) : ''}
+    ${kind === 'taboo' ? `<p>تجاوز · ${number(team.skipped)} | مخالفة · ${number(team.violations ?? 0)}</p>` : ''}
+    <div class="actions">
+    ${team.undoTime && team.accepted?.length ? withAction('undo', 'تراجع عن آخر إجابة', 'outline') : ''}
     ${withAction('next', team.turn + 1 === team.total ? 'أظهر النتيجة' : 'الدور التالي')}
   </div>`;
 }
@@ -267,7 +289,7 @@ export function teamRoundPanel({ kind, phase, team }, { privateVisible = false }
       kind === 'taboo' ? 'ابدأ ٤٥ ثانية' : 'افتح المزاد')}</div>`;
   } else if (phase === 'team-summary') {
     title = 'حصيلة الدور';
-    body = summary(team);
+    body = summary(kind, team);
   } else if (phase === 'team-result') {
     ({ title, body } = result(team));
   } else if (phase === 'team-bid') {

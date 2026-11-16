@@ -11,6 +11,7 @@ export const anonymousQuestionLimit = 360;
 export const evidenceDuration = 120_000;
 export const evidenceClueLimit = 3;
 export const reverseQuestionLimit = 220;
+export const liarAnswerLimit = 180;
 const sessionVersion = 4;
 const phases = {
   outsider: ['cards', 'questions', 'discussion', 'voting', 'runoff', 'result'],
@@ -93,6 +94,9 @@ function restoreRound(saved, players) {
   if (round.phase === 'voting' && (!Array.isArray(round.voters) || !round.voters[round.index] ||
       round.votes.length !== round.index || !round.voters.every((id) => round.order.includes(id)))) return null;
   if (['cards', 'questions', 'answers', 'turn'].includes(round.phase) && !round.order[round.index]) return null;
+  if (round.phase === 'cards' && round.delivered !== undefined && (!Array.isArray(round.delivered) ||
+      round.delivered.length >= round.order.length || new Set(round.delivered).size !== round.delivered.length ||
+      !round.delivered.every((id) => round.order.includes(id)) || round.delivered.includes(round.order[round.index]))) return null;
   if (round.kind === 'outsider' && (!Array.isArray(round.pair) || typeof round.pair[0] !== 'string' ||
       typeof round.pair[1] !== 'string' || !Array.isArray(round.pair[2]) || !round.order.includes(round.outsiderId))) return null;
   if (round.kind === 'mafia' && (!Array.isArray(round.alive) || !round.roles ||
@@ -278,6 +282,7 @@ export function startGame(session, kind, random = Math.random, options = session
       round.phase = 'turn';
       round.prompt = draw(session, kind, challenges, random);
       round.scores = {};
+      round.challengeOutcomes = {};
       round.clock = freshClock(challengeDuration);
       break;
     case 'evidence':
@@ -308,9 +313,9 @@ export function currentPlayer(session) {
   return session.players.find((player) => player.id === order[round.index]) || null;
 }
 
-export function playerCard(session) {
+export function playerCard(session, id = currentPlayer(session)?.id) {
   const round = session.round;
-  const player = currentPlayer(session);
+  const player = session.players.find((item) => item.id === id);
   if (round?.phase !== 'cards' || !player) return null;
   if (round.kind === 'outsider') {
     const [word, alternate, forbidden] = round.pair;
@@ -351,6 +356,23 @@ export function advanceCard(session) {
   return true;
 }
 
+export function deliveredCards(round) {
+  return round.delivered ?? round.order.slice(0, round.index);
+}
+
+export function markCardDelivered(session, id) {
+  const round = session.round;
+  if (round?.phase !== 'cards' || session.mode !== 'remote' || !round.order.includes(id)) return false;
+  round.delivered = [...new Set([...deliveredCards(round), id])];
+  const next = round.order.findIndex((item) => !round.delivered.includes(item));
+  if (next >= 0) {
+    round.index = next;
+    return true;
+  }
+  round.index = round.order.length - 1;
+  return advanceCard(session);
+}
+
 export function questionTurn(session) {
   const round = session.round;
   if (round?.phase !== 'questions') return null;
@@ -383,9 +405,13 @@ export function advanceCourt(session) {
   return true;
 }
 
-export function advanceAnswer(session) {
+export function advanceAnswer(session, input = '') {
   const round = session.round;
-  if (round?.phase !== 'answers') return false;
+  if (round?.kind !== 'liar' || round.phase !== 'answers' || typeof input !== 'string') return false;
+  const answer = input.trim();
+  if (answer.length > liarAnswerLimit) return false;
+  round.answers ??= {};
+  if (answer) round.answers[round.order[round.index]] = answer;
   round.index++;
   if (round.index === round.order.length) {
     round.index = 0;
@@ -427,17 +453,32 @@ export function voteResult(votes) {
   return { ranked, top, leaders: ranked.filter((row) => row[1] === top).map(([id]) => id) };
 }
 
+export function voteOptions(round, voterIndex) {
+  if (round.kind === 'reverse') return round.entries.flatMap((entry, index) =>
+    entry.author === round.voters[voterIndex] ? [] : [index]);
+  if (round.kind === 'court') return [round.court.prosecutor, round.court.defendant];
+  const candidates = round.runoffIds || round.voters;
+  return ['outsider', 'liar', 'mafia'].includes(round.kind)
+    ? candidates.filter((id) => id !== round.voters[voterIndex])
+    : candidates;
+}
+
+export function castVoteBatch(session, votes) {
+  const round = session.round;
+  if (round?.phase !== 'voting' || !Array.isArray(votes) || votes.length !== round.voters.length - round.index ||
+      !votes.every((vote, index) => vote === null || voteOptions(round, round.index + index).includes(vote))) return false;
+  for (const vote of votes) castVote(session, vote);
+  return true;
+}
+
 export function castVote(session, id) {
   const round = session.round;
-  if (round?.phase !== 'voting') return false;
+  if (round?.phase !== 'voting' || (id !== null && !voteOptions(round, round.index).includes(id))) return false;
   if (round.kind === 'reverse') {
-    if (!canVoteForReverseEntry(round, id, round.index)) return false;
     round.votes.push(id);
     if (++round.index === round.voters.length) round.phase = 'result';
     return true;
   }
-  const options = round.kind === 'court' ? [round.court.prosecutor, round.court.defendant] : round.runoffIds || round.voters;
-  if (id !== null && !options.includes(id)) return false;
   round.votes.push(id);
   round.index++;
   if (round.index < round.voters.length) return true;
@@ -707,10 +748,16 @@ export function pauseClock(session, now = Date.now()) {
   return true;
 }
 
-export function recordChallenge(session, passed, random = Math.random, now = Date.now()) {
+export function recordChallenge(session, outcome, random = Math.random, now = Date.now()) {
   const round = session.round;
-  if (round?.phase !== 'turn' || !round.clock.started || (passed && clockRemaining(session, now) === 0)) return false;
-  round.scores[round.order[round.index]] = passed ? 1 : 0;
+  if (round?.kind !== 'challenge' || round.phase !== 'turn' || !round.clock.started) return false;
+  const expired = clockRemaining(session, now) === 0;
+  if (typeof outcome === 'boolean') outcome = outcome ? 'passed' : expired ? 'missed' : 'skipped';
+  if (!(expired ? ['missed'] : ['passed', 'missed', 'skipped']).includes(outcome)) return false;
+  const player = round.order[round.index];
+  round.challengeOutcomes ??= {};
+  round.challengeOutcomes[player] = outcome;
+  round.scores[player] = Number(outcome === 'passed');
   round.index++;
   if (round.index >= round.order.length) {
     round.phase = 'result';

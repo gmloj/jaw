@@ -99,6 +99,15 @@ export function rateChoice(session, voter, points) {
   return true;
 }
 
+export function rateChoiceBatch(session, points) {
+  const round = session.round;
+  if (round?.kind !== 'choice' || round.phase !== 'choice-rating' || !Array.isArray(points) ||
+      points.length !== round.order.length - 1 - round.votes.length ||
+      !points.every((point) => ratings.includes(point))) return false;
+  for (const point of points) rateChoice(session, choiceVoter(round), point);
+  return true;
+}
+
 export function skipChoice(session) {
   const round = session.round;
   if (round?.kind !== 'choice' || !['picking', 'choice-explain'].includes(round.phase) || round.skips === 0) return false;

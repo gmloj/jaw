@@ -1,4 +1,6 @@
 import { reduceTeamGame, teamKinds } from './team-engine.js';
+import { audienceState } from './audience-state.js';
+import { rateChoiceBatch } from './choice-engine.js';
 import { games } from './content.js';
 import { evidenceCases } from './party-content.js';
 import { createVisuals } from './visual/controller.js';
@@ -7,11 +9,11 @@ import { createMotion } from './motion/controller.js';
 import { createTutorial } from './tutorial.js';
 import { motionPreferences, feedbackForAction, resultFeedback } from './motion/policy.js';
 import {
-  beginChoiceRating, expireChoice, rateChoice, skipChoice,
+  beginChoiceRating, expireChoice, skipChoice,
   addReverseEntry, advanceKnow, openEvidenceClue, recordKnowAnswer, recordKnowGuess, resolveEvidence,
-  addAnonymousQuestion, advanceAnswer, advanceCard, advanceCourt, advanceQuestion, beginDiscussion, beginVote, castVote, clockRemaining,
+  addAnonymousQuestion, advanceAnswer, advanceCard, advanceCourt, advanceQuestion, beginDiscussion, beginVote, castVote, castVoteBatch, clockRemaining,
   closeAnonymousQuestion, openAnonymousQuestion,
-  configureSession, currentPlayer, finishNight, leaveRound, nightTurn, nextChoicePrompt, nextNight, nextSocialPrompt,
+  configureSession, finishNight, leaveRound, markCardDelivered, nightTurn, nextChoicePrompt, nextNight, nextSocialPrompt,
   maxPlayers, pauseClock, playerCard, recordChallenge, recordNightChoice, restoreSession, selectChoice, startClock, startGame,
 } from './engine.js';
 import { button, defaultPlayerName, gameRules, nameFields, number, roundView, setupView } from './views.js';
@@ -26,7 +28,6 @@ const welcome = document.getElementById('welcome');
 const siteTitle = document.title;
 const stage = document.querySelector('#play');
 const modal = document.querySelector('#modal');
-const choiceRatingTapWindow = 250;
 let session = restoreSession(read(sessionKey));
 const savedPreferences = read(settingsKey) ?? read('dawrak-preferences');
 let preferences = motionPreferences(savedPreferences);
@@ -44,13 +45,15 @@ let setupReturn;
 let roundOrigin = null;
 let draft;
 let privateVisible = false;
+let privateCardId = null;
 let nightUnlocked = false;
 let modalOpener;
 let leaveTo = 'games';
 let clockEnded = false;
 let clockInterval;
 let storageWarning = false;
-let lastChoiceRating = -Infinity;
+let audienceChannel;
+let audienceToken;
 
 function read(key) {
   try {
@@ -267,6 +270,28 @@ function browseTarget() {
   return 'home';
 }
 
+function syncAudience() {
+  audienceChannel?.postMessage({ type: 'display', state: stage.hidden ? null : audienceState(session) });
+}
+
+function openAudience() {
+  if (!('BroadcastChannel' in window)) {
+    announce('متصفحك ما يدعم شاشة اللاعبين.');
+    return;
+  }
+  if (!audienceChannel) {
+    audienceToken = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+      (byte) => byte.toString(16).padStart(2, '0')).join('');
+    audienceChannel = new BroadcastChannel('jaw-audience-' + audienceToken);
+    audienceChannel.onmessage = ({ data }) => {
+      if (data?.type === 'ready') syncAudience();
+    };
+  }
+  const help = stage.querySelector('#audience-help');
+  help.textContent = 'شارك تبويب اللاعبين. إذا ما انفتح، اسمح بفتح تبويب جديد من المتصفح.';
+  window.open('./audience.html#' + audienceToken, '_blank', 'noopener');
+}
+
 function renderBrowse(target, { initial = false, push = false, quick = false } = {}) {
   const leavingRound = !stage.hidden;
   const page = document.getElementById(target);
@@ -277,6 +302,7 @@ function renderBrowse(target, { initial = false, push = false, quick = false } =
   visuals.atmosphere('jaw');
   for (const candidate of pages) candidate.hidden = candidate !== page;
   stage.hidden = true;
+  syncAudience();
   if (leavingRound) stage.replaceChildren();
   updateClock();
   document.body.dataset.playing = 'false';
@@ -352,7 +378,8 @@ function renderRound({ focus = true, animate = true, effect = 'round' } = {}) {
   stage.hidden = false;
   document.body.dataset.playing = 'true';
   document.title = siteTitle;
-  stage.innerHTML = roundView(session, { privateVisible, nightUnlocked });
+  stage.innerHTML = roundView(session, { privateVisible, nightUnlocked, privateCardId });
+  syncAudience();
   const surface = stage.firstElementChild;
   const { kind, phase } = session.round;
   const ratingHeading = kind === 'choice' && phase === 'choice-rating'
@@ -435,7 +462,9 @@ function updateClock() {
     const pass = stage.querySelector('[data-action="challenge-pass"]');
     const next = stage.querySelector('[data-action="challenge-fail"]');
     pass.disabled = !state.started || late;
-    const nextLabel = late ? 'انتقل للي بعده' : 'تخطّى الدور';
+    const skip = stage.querySelector('[data-action="challenge-skip"]');
+    skip.disabled = !state.started || late;
+    const nextLabel = late ? 'انتهى الوقت · سجّل عدم الإنجاز' : 'ما أنجز التحدي';
     if (next.textContent !== nextLabel) next.textContent = nextLabel;
   }
   toggle.disabled = late;
@@ -492,7 +521,8 @@ function playTeamAction(action, value, now = Date.now()) {
   if (action === 'hide-verdict' || (action === 'tick' && before.kind === 'hideout')) privateVisible = false;
   if (next.phase === before.phase) {
     updateRound({ focus: false, animate: false });
-    const focus = { correct: 'correct', skip: 'skip', pause: 'resume', resume: 'pause' }[action];
+    const focus = { correct: 'correct', skip: 'skip', violation: 'violation', pause: 'resume', resume: 'pause' }[action];
+    if (before.kind === 'auction' && action === 'correct') stage.querySelector('#auction-answer-form input')?.focus({ preventScroll: true });
     if (focus) stage.querySelector(`[data-team-action="${focus}"]`)?.focus({ preventScroll: true });
     if (action === 'bid') stage.querySelector('#team-bid, [data-team-action="challenge"]')?.focus({ preventScroll: true });
     if (action === 'hide-guess') stage.querySelector('[data-team-action="hide-correct"]')?.focus({ preventScroll: true });
@@ -562,6 +592,7 @@ function changeRound(effect = 'round') {
 }
 
 function beginSetup(data) {
+  announce('');
   const form = document.querySelector('#setup-form');
   const kind = form.dataset.kind;
   const size = Number(data.get('count'));
@@ -615,8 +646,8 @@ function privateText() {
     const suspect = session.players.find((player) => player.id === report.id).name;
     return `يا ${receiver}، نتيجة التحرّي في المافيا: ${suspect} ${report.isMafia ? 'من المافيا' : 'من أهل المدينة'}.`;
   }
-  const card = playerCard(session);
-  const player = currentPlayer(session);
+  const card = playerCard(session, privateCardId);
+  const player = session.players.find(({ id }) => id === privateCardId);
   if (!card || !player) return '';
   return `بطاقتك في ${games[session.round.kind].title}\nيا ${player.name}، بطاقتك السرّية: ${card.title}\n${card.detail}${card.extra ? '\n' + card.extra : ''}`;
 }
@@ -818,8 +849,20 @@ function handleAction(control) {
     case 'court-next':
       if (advanceCourt(session)) changeRound();
       break;
-    case 'answer-next':
-      if (advanceAnswer(session)) changeRound();
+    case 'audience-open':
+      openAudience();
+      break;
+    case 'pick-card':
+      privateCardId = Number(control.dataset.recipient);
+      privateVisible = true;
+      renderRound({ effect: 'reveal' });
+      stage.querySelector('[data-action="copy-card"]')?.focus();
+      break;
+    case 'mark-card':
+      if (privateVisible && privateCardId === Number(control.dataset.recipient) && markCardDelivered(session, privateCardId)) {
+        privateCardId = null;
+        changeRound();
+      }
       break;
     case 'reveal':
       privateVisible = true;
@@ -849,6 +892,15 @@ function handleAction(control) {
       if (beginDiscussion(session)) changeRound();
       break;
     case 'begin-vote':
+      if (round.kind === 'reverse' && round.entries.length < round.order.length) {
+        openModal('فيه لاعبين باقي ما أرسلوا', `
+          <p>وصلت ${number(round.entries.length)} من ${number(round.order.length)} أسئلة. تبدأ التصويت باللي وصل؟</p>
+          <div class="actions">${button('confirm-vote', 'صوّتوا بالأسئلة الموجودة')}${button('close', 'انتظر الباقين', 'outline')}</div>
+        `, control);
+      } else if (beginVote(session)) changeRound('vote');
+      break;
+    case 'confirm-vote':
+      closeModal();
       if (beginVote(session)) changeRound('vote');
       break;
     case 'skip-night':
@@ -867,21 +919,8 @@ function handleAction(control) {
       if (nextSocialPrompt(session)) changeRound();
       break;
     case 'choice-rate-start':
-      if (beginChoiceRating(session)) {
-        lastChoiceRating = -Infinity;
-        changeRound();
-      }
+      if (beginChoiceRating(session)) changeRound();
       break;
-    case 'choice-rate': {
-      const now = performance.now();
-      // Rendering the next voter immediately puts fresh buttons under a rapid second tap.
-      if (now - lastChoiceRating < choiceRatingTapWindow) break;
-      if (rateChoice(session, Number(control.dataset.voter), Number(control.dataset.points))) {
-        lastChoiceRating = now;
-        changeRound('vote');
-      }
-      break;
-    }
     case 'choice-skip':
       if (skipChoice(session)) changeRound();
       break;
@@ -929,13 +968,17 @@ function handleAction(control) {
         document.querySelector('#clock-toggle')?.focus();
       } else {
         save(sessionKey, session);
+        syncAudience();
         updateClock();
       }
       break;
     case 'challenge-pass':
     case 'challenge-fail':
-      if (recordChallenge(session, action === 'challenge-pass')) changeRound();
+    case 'challenge-skip': {
+      const outcome = { 'challenge-pass': 'passed', 'challenge-fail': 'missed', 'challenge-skip': 'skipped' }[action];
+      if (recordChallenge(session, outcome)) changeRound();
       break;
+    }
     case 'restart':
       if (startGame(session, round.kind)) changeRound('start');
       break;
@@ -1017,6 +1060,22 @@ document.addEventListener('submit', (event) => {
         stage.querySelector('#anonymous-question').focus();
       }
       break;
+    case 'liar-answer-form':
+      if (advanceAnswer(session, data.get('answer'))) changeRound();
+      break;
+    case 'auction-answer-form':
+      if (!playTeamAction('correct', data.get('answer'))) {
+        showFormError('#auction-answer-error', 'اكتب إجابة مختلفة قبل انتهاء الوقت.');
+      }
+      break;
+    case 'choice-rating-form':
+      if (rateChoiceBatch(session, data.getAll('rating').map(Number))) changeRound('vote');
+      break;
+    case 'batch-vote-form': {
+      const votes = [...data.values()].map((vote) => vote === 'skip' ? null : Number(vote));
+      if (castVoteBatch(session, votes)) changeRound('vote');
+      break;
+    }
     case 'vote-form': {
       const vote = data.get('vote');
       if (vote !== null && castVote(session, vote === 'skip' ? null : Number(vote))) changeRound('vote');
@@ -1058,6 +1117,16 @@ modal.addEventListener('keydown', (event) => {
   event.preventDefault();
   const next = modal.querySelector(`[data-player="${Number(event.target.dataset.player) + 1}"]`);
   (next || modal.querySelector('#setup-form [type="submit"]'))?.focus();
+});
+
+stage.addEventListener('change', ({ target }) => {
+  if (!target.matches('[data-batch-field]')) return;
+  const fields = [...target.form.querySelectorAll('[data-batch-field]')];
+  const round = session.round;
+  const recorded = round.kind === 'choice' ? round.votes.length : round.index;
+  const selected = fields.filter((input) => input.value !== '').length;
+  target.form.querySelector('[data-batch-progress]').textContent =
+    `تسجّل ${number(recorded + selected)} من ${number(recorded + fields.length)}`;
 });
 
 stage.addEventListener('input', (event) => {

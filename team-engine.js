@@ -100,12 +100,21 @@ function finishTimedTurn(round) {
   return settle(round, 'taboo', team.pointCount ? activeTeam(team) : null, team.pointCount);
 }
 
-function play(round, action, now) {
+function answerKey(answer) {
+  return answer.normalize('NFKC').toLocaleLowerCase('ar')
+    .replace(/[\u061C\u0640\u064B-\u065F\u0670\u200B-\u200F\u202A-\u202E\u2060-\u206F\uFEFF]/g, '')
+    .trim().replace(/\s+/g, ' ');
+}
+
+function play(round, action, value, now) {
   const { kind, team } = round;
   const expired = team.endsAt !== null && now >= team.endsAt;
   if (action === 'finish' || (action === 'tick' && expired)) return finishTimedTurn(round);
   if (action === 'resume' && team.remaining !== null) {
     return change(round, round.phase, { endsAt: now + team.remaining, remaining: null });
+  }
+  if (kind === 'auction' && action === 'undo' && team.accepted?.length && !expired) {
+    return change(round, round.phase, { accepted: team.accepted.slice(0, -1), pointCount: team.pointCount - 1 });
   }
   if (team.endsAt === null || expired) return round;
   if (action === 'pause') {
@@ -114,9 +123,16 @@ function play(round, action, now) {
   if (kind === 'taboo') {
     if (action === 'correct') return change(round, round.phase, deal({ ...team, pointCount: team.pointCount + 1 }));
     if (action === 'skip') return change(round, round.phase, deal({ ...team, skipped: team.skipped + 1 }));
+    if (action === 'violation') return change(round, round.phase, deal({ ...team, violations: (team.violations ?? 0) + 1 }));
   } else if (action === 'correct') {
-    const updated = change(round, round.phase, { pointCount: team.pointCount + 1 });
-    if (updated.team.pointCount === team.bid.amount) return settle(updated, 'auction-won', team.bid.team, 1);
+    const answer = typeof value === 'string' ? value.trim() : '';
+    const key = answerKey(answer);
+    if (!key || answer.length > 80 || team.accepted?.some((item) => answerKey(item) === key)) return round;
+    const accepted = [...(team.accepted ?? []), answer];
+    const updated = change(round, round.phase, { pointCount: team.pointCount + 1, accepted });
+    if (updated.team.pointCount === team.bid.amount) {
+      return settle(change(updated, round.phase, { undoTime: team.endsAt - now }), 'auction-won', team.bid.team, 1);
+    }
     return updated;
   }
   return round;
@@ -138,11 +154,18 @@ export function reduceTeamGame(round, action, value, now = Date.now()) {
       return change(round, 'team-play', { bidding: null, endsAt: now + durations.auction });
     }
   }
-  if (phase === 'team-play') return play(round, action, now);
+  if (phase === 'team-play') return play(round, action, value, now);
+  if (kind === 'auction' && phase === 'team-summary' && action === 'undo' && team.undoTime > 0 && team.accepted?.length) {
+    return change(round, 'team-play', {
+      scores: team.scores.map((score, i) => i === team.bid.team ? score - 1 : score),
+      pointCount: team.pointCount - 1, accepted: team.accepted.slice(0, -1),
+      explanation: null, undoTime: null, remaining: team.undoTime,
+    });
+  }
   if (phase === 'team-summary' && action === 'next') {
     const turn = team.turn + 1;
     if (turn === team.total) return change(round, 'team-result');
-    return change(round, 'team-ready', deal({ ...team, turn, ...turnFields() }));
+    return change(round, 'team-ready', deal({ ...team, turn, ...turnFields(), accepted: [], undoTime: null, violations: 0 }));
   }
   return round;
 }
@@ -220,6 +243,12 @@ export function teamRoundIsValid(round, deck = decks[round?.kind]) {
   if (kind !== 'taboo' && skipped !== 0) return false;
   if (phase === 'team-ready' && pointCount !== 0) return false;
   if (phase === 'team-ready' && skipped !== 0) return false;
+  if (team.violations !== undefined && !isCount(team.violations)) return false;
+  if (team.accepted !== undefined && (!Array.isArray(team.accepted) || team.accepted.length > pointCount ||
+      !team.accepted.every((answer) => isText(answer) && answer.length <= 80 && answerKey(answer)) ||
+      new Set(team.accepted.map(answerKey)).size !== team.accepted.length)) return false;
+  if (team.undoTime != null && (!Number.isFinite(team.undoTime) || team.undoTime <= 0 || team.undoTime > durations.auction ||
+      kind !== 'auction' || !['team-summary', 'team-result'].includes(phase) || team.explanation?.result !== 'auction-won')) return false;
   return validDeckState(kind, team, deck) && validTimer(kind, phase, team) && validBid(kind, phase, team) &&
     validExplanation(kind, phase, team);
 }
